@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DobiBuddy</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    :root {
+      --text: #0f172a;
+      --muted: #475569;
+      --panel: rgba(255,255,255,0.78);
+      --panel-border: rgba(255,255,255,0.45);
+      --input-bg: rgba(255,255,255,0.95);
+      --input-text: #111827;
+      --pill-bg: rgba(15,23,42,0.08);
+      --pill-text: #0f172a;
+      --tab-bg: rgba(15,23,42,0.08);
+      --tab-text: #0f172a;
+      --tab-active-bg: #38bdf8;
+      --tab-active-text: #082f49;
+      --message: #0f172a;
+      --overlay: rgba(255,255,255,0.2);
+    }
+
+    body.dark {
+      --text: #ffffff;
+      --muted: #cbd5e1;
+      --panel: rgba(255,255,255,0.08);
+      --panel-border: rgba(255,255,255,0.1);
+      --pill-bg: rgba(255,255,255,0.12);
+      --pill-text: #ffffff;
+      --tab-bg: rgba(255,255,255,0.12);
+      --tab-text: #ffffff;
+      --message: #e2e8f0;
+      --overlay: rgba(15,23,42,0.62);
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+      padding: 20px 14px 40px;
+      background:
+        linear-gradient(var(--overlay), var(--overlay)),
+        url("laundry.jpg") no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    .app {
+      max-width: 430px;
+      margin: 0 auto;
+      display: none;
+    }
+
+    .welcome-page {
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 90vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .welcome-card {
+      width: 100%;
+      background: var(--panel);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--panel-border);
+      border-radius: 26px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      text-align: center;
+    }
+
+    .welcome-title {
+      font-size: 34px;
+      margin: 0;
+      font-weight: bold;
+    }
+
+    .welcome-subtitle {
+      margin: 8px 0 24px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .block-btn {
+      width: 100%;
+      border: none;
+      border-radius: 18px;
+      padding: 16px;
+      margin-top: 12px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      background: #38bdf8;
+      color: #082f49;
+    }
+
+    .block-btn:nth-of-type(2) {
+      background: #f472b6;
+      color: #831843;
+    }
+
+    .block-btn:nth-of-type(3) {
+      background: #a78bfa;
+      color: #3b0764;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .app-title {
+      font-size: 26px;
+      font-weight: bold;
+      margin: 0;
+    }
+
+    .app-subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .status-pill, .theme-btn {
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: bold;
+      background: var(--pill-bg);
+      color: var(--pill-text);
+      border: none;
+    }
+
+    .theme-btn, #enableNotifBtn {
+      cursor: pointer;
+      border-radius: 12px;
+      font-size: 16px;
+    }
+
+    .panel {
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--panel-border);
+      border-radius: 22px;
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.22);
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      margin: 0 0 14px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .washer-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .washer-btn {
+      border: none;
+      border-radius: 14px;
+      padding: 14px 12px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      background: var(--tab-bg);
+      color: var(--tab-text);
+    }
+
+    .washer-btn.active {
+      background: var(--tab-active-bg);
+      color: var(--tab-active-text);
+      transform: scale(1.02);
+    }
+
+    .machine-card { text-align: center; }
+
+    .machine-name {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .machine-status {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .report-badge {
+      display: inline-block;
+      margin-bottom: 12px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: bold;
+      background: rgba(239,68,68,0.18);
+      color: #ef4444;
+    }
+
+    .machine-wrap {
+      display: flex;
+      justify-content: center;
+      margin: 18px 0 10px;
+    }
+
+    .machine-box {
+      width: 220px;
+      background: linear-gradient(to bottom, #e5e7eb, #cbd5e1);
+      border-radius: 18px;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.18);
+      overflow: hidden;
+      padding-bottom: 14px;
+    }
+
+    .machine-top {
+      height: 42px;
+      background: linear-gradient(to bottom, #cbd5e1, #94a3b8);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+    }
+
+    .machine-knob {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #f8fafc;
+      border: 2px solid #64748b;
+    }
+
+    .machine-panel {
+      display: flex;
+      gap: 5px;
+    }
+
+    .machine-panel span {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #f8fafc;
+      display: inline-block;
+    }
+
+    .machine-body {
+      padding: 18px 0 8px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .machine-door {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #dff7ff, #60a5fa 55%, #1d4ed8 100%);
+      border: 8px solid #94a3b8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .bubbles {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+      display: none;
+    }
+
+    .bubbles span {
+      position: absolute;
+      bottom: -10px;
+      width: 8px;
+      height: 8px;
+      background: rgba(255,255,255,0.65);
+      border-radius: 50%;
+      animation: rise 3s infinite ease-in;
+    }
+
+    .bubbles span:nth-child(1) { left: 20%; animation-delay: 0s; }
+    .bubbles span:nth-child(2) { left: 40%; animation-delay: 1s; }
+    .bubbles span:nth-child(3) { left: 60%; animation-delay: 0.5s; }
+    .bubbles span:nth-child(4) { left: 78%; animation-delay: 1.5s; }
+
+    .drum {
+      width: 98px;
+      height: 98px;
+      border-radius: 50%;
+      position: relative;
+      z-index: 2;
+    }
+
+    .cloth {
+      position: absolute;
+      border-radius: 45% 55% 50% 50%;
+      opacity: 0.92;
+    }
+
+    .cloth1 { width: 38px; height: 38px; background: #fb7185; top: 10px; left: 26px; }
+    .cloth2 { width: 34px; height: 34px; background: #facc15; bottom: 12px; left: 12px; }
+    .cloth3 { width: 32px; height: 32px; background: #4ade80; bottom: 18px; right: 12px; }
+
+    @keyframes spinDrum {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes pausedShake {
+      0%,100% { transform: rotate(0deg); }
+      25% { transform: rotate(2deg); }
+      75% { transform: rotate(-2deg); }
+    }
+
+    @keyframes rise {
+      from { transform: translateY(0); opacity: 1; }
+      to { transform: translateY(-115px); opacity: 0; }
+    }
+
+    .drum.running { animation: spinDrum 1.2s linear infinite; }
+    .drum.paused { animation: pausedShake 0.8s ease-in-out infinite; }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .info-box {
+      background: rgba(255,255,255,0.10);
+      border-radius: 14px;
+      padding: 12px;
+      text-align: left;
+    }
+
+    .info-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .info-value {
+      font-size: 15px;
+      font-weight: bold;
+      word-break: break-word;
+    }
+
+    .queue-card {
+      margin-bottom: 8px;
+      padding: 8px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.12);
+    }
+
+    .emergency-box {
+      margin-top: 14px;
+      border-radius: 16px;
+      padding: 14px;
+      background: rgba(239,68,68,0.16);
+      text-align: left;
+    }
+
+    .emergency-title {
+      font-size: 13px;
+      color: #fecaca;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+
+    .emergency-number {
+      font-size: 18px;
+      font-weight: bold;
+      color: #ffffff;
+    }
+
+    .form-group { margin-bottom: 12px; }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      border: none;
+      outline: none;
+      font-size: 15px;
+      background: var(--input-bg);
+      color: var(--input-text);
+      resize: vertical;
+    }
+
+    .book-btn, .report-btn, .wa-btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 16px;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .book-btn { background: #22c55e; }
+    .report-btn { background: #ef4444; }
+    .wa-btn { background: #25D366; }
+
+    .msg {
+      margin-top: 12px;
+      text-align: center;
+      font-weight: bold;
+      color: var(--message);
+      min-height: 20px;
+    }
+
+    .note {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .small-link {
+      text-align: center;
+      margin-top: 14px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .small-link button {
+      background: none;
+      border: none;
+      color: #38bdf8;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0;
+    }
+
+    .hidden { display: none; }
+
+    .change-block {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="welcome-page" id="welcomePage">
+    <div class="welcome-card">
+      <h1 class="welcome-title">DobiBuddy</h1>
+      <p class="welcome-subtitle">Choose your Blok Kediaman</p>
+
+      <button class="block-btn" data-block="Tuah">Tuah</button>
+      <button class="block-btn" data-block="Sri Kandi">Sri Kandi</button>
+      <button class="block-btn" data-block="Mahsuri">Mahsuri</button>
+    </div>
+  </div>
+
+  <div class="app" id="mainApp">
+    <div class="topbar">
+      <div>
+        <h1 class="app-title">DobiBuddy</h1>
+        <p class="app-subtitle">
+          <span id="selectedBlockText">Blok Kediaman</span> Laundry
+        </p>
+        <button class="change-block" id="changeBlockBtn">Change block</button>
+      </div>
+
+      <div class="topbar-right">
+        <div id="topStatus" class="status-pill">Loading...</div>
+        <button id="enableNotifBtn" class="status-pill">🔔</button>
+        <button id="themeToggle" class="theme-btn">🌙</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title">Select Washer</div>
+
+      <div class="washer-tabs">
+        <button class="washer-btn active" data-machine="washer01">Washer 1</button>
+        <button class="washer-btn" data-machine="washer02">Washer 2</button>
+      </div>
+
+      <div class="machine-card">
+        <div class="machine-name" id="machineName">Washer 1</div>
+        <div class="machine-status" id="status">Loading...</div>
+        <div id="reportBadge" class="report-badge" style="display:none;">Machine Reported</div>
+
+        <div class="machine-wrap">
+          <div class="machine-box">
+            <div class="machine-top">
+              <div class="machine-knob"></div>
+              <div class="machine-panel">
+                <span></span><span></span><span></span><span></span><span></span>
+              </div>
+            </div>
+
+            <div class="machine-body">
+              <div class="machine-door">
+                <div class="bubbles" id="bubbles">
+                  <span></span><span></span><span></span><span></span>
+                </div>
+
+                <div class="drum" id="drum">
+                  <div class="cloth cloth1"></div>
+                  <div class="cloth cloth2"></div>
+                  <div class="cloth cloth3"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-box">
+            <div class="info-label">Current User</div>
+            <div class="info-value" id="currentPhone">-</div>
+          </div>
+
+          <div class="info-box">
+            <div class="info-label">Time Left</div>
+            <div class="info-value" id="timeLeft">0:00</div>
+          </div>
+
+          <div class="info-box">
+            <div class="info-label">Temperature</div>
+            <div class="info-value" id="tempDisplay">-</div>
+          </div>
+
+          <div class="info-box">
+            <div class="info-label">Phase</div>
+            <div class="info-value" id="phaseDisplay">IDLE</div>
+          </div>
+        </div>
+
+        <div id="whatsappBox" class="panel hidden" style="margin-top:16px; margin-bottom:0;">
+          <div class="section-title">WhatsApp Reminder</div>
+          <button class="wa-btn" id="openWhatsappBtn">Open WhatsApp Reminder</button>
+          <div class="note">This opens WhatsApp with a ready-made message.</div>
+        </div>
+
+        <div class="panel" style="margin-top:16px; margin-bottom:0;">
+          <div class="section-title">In Queue</div>
+          <div id="queueList" class="info-value">No queue</div>
+        </div>
+
+        <div class="emergency-box">
+          <div class="emergency-title">Emergency Contact</div>
+          <div class="emergency-number">012-3456789</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title">Book Machine</div>
+
+      <div class="form-group">
+        <label class="form-label" for="phone">Phone Number</label>
+        <input type="tel" id="phone" maxlength="11" placeholder="Example: 01234567890" />
+        <div class="note">Phone must start with 01. Maximum 11 digits.</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="temperature">Temperature</label>
+        <select id="temperature">
+          <option value="">Select temperature</option>
+          <option value="Cold">Cold</option>
+          <option value="Warm">Warm</option>
+          <option value="Hot">Hot</option>
+        </select>
+      </div>
+
+      <button class="book-btn" id="bookBtn">Book Selected Washer</button>
+      <div id="message" class="msg"></div>
+
+      <div class="small-link">
+        Machine problem?
+        <button id="showReportBtn">Report machine</button>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="reportPanel">
+      <div class="section-title">Report Machine Problem</div>
+
+      <div class="form-group">
+        <label class="form-label" for="reportPhone">Your Phone Number</label>
+        <input type="tel" id="reportPhone" maxlength="11" placeholder="Example: 01234567890" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="issueText">Problem Description</label>
+        <textarea id="issueText" rows="4" placeholder="Example: Machine not spinning / water not coming out"></textarea>
+      </div>
+
+      <button class="report-btn" id="reportBtn">Submit Report</button>
+      <div id="reportMessage" class="msg"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getDatabase,
+      ref,
+      onValue,
+      runTransaction,
+      update
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBLbYpP0xEjgO0iMDBlTnq2rX9TmVtE6C4",
+      authDomain: "dobibuddy.firebaseapp.com",
+      databaseURL: "https://dobibuddy-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "dobibuddy",
+      storageBucket: "dobibuddy.firebasestorage.app",
+      messagingSenderId: "1080890147610",
+      appId: "1:1080890147610:web:58be21fb9438162b3be2a3",
+      measurementId: "G-RPGKSLRN0E"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let selectedMachine = "washer01";
+    let selectedBlock = "";
+    let unsubscribe = null;
+    let latestMachineData = null;
+
+    let fiveMinNotified = false;
+    let queueNotified = false;
+
+    const TOTAL_SLOT = 2400;
+    const PREP_TIME = 300;
+    const WASH_TIME = 1800;
+    const ENDING_TIME = 300;
+
+    function notifyUser(title, message) {
+      alert(message);
+
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(title, {
+          body: message,
+          icon: "https://cdn-icons-png.flaticon.com/512/1046/1046857.png"
+        });
+      }
+    }
+
+    function setInitialTheme() {
+      const saved = localStorage.getItem("theme");
+
+      if (saved === "dark") document.body.classList.add("dark");
+      else if (saved === "light") document.body.classList.remove("dark");
+      else {
+        document.body.classList.toggle(
+          "dark",
+          window.matchMedia("(prefers-color-scheme: dark)").matches
+        );
+      }
+
+      updateThemeButton();
+    }
+
+    function updateThemeButton() {
+      document.getElementById("themeToggle").textContent =
+        document.body.classList.contains("dark") ? "☀️" : "🌙";
+    }
+
+    function selectBlock(blockName) {
+      selectedBlock = blockName;
+      localStorage.setItem("selectedBlock", blockName);
+
+      document.getElementById("selectedBlockText").innerText = blockName;
+      document.getElementById("welcomePage").style.display = "none";
+      document.getElementById("mainApp").style.display = "block";
+
+      listenToMachine(selectedMachine);
+    }
+
+    function backToBlockSelection() {
+      selectedBlock = "";
+      localStorage.removeItem("selectedBlock");
+
+      document.getElementById("mainApp").style.display = "none";
+      document.getElementById("welcomePage").style.display = "flex";
+
+      if (unsubscribe) unsubscribe();
+    }
+
+    function maskPhone(phone) {
+      if (!phone) return "-";
+      if (phone.length <= 6) return phone;
+      return phone.slice(0, 3) + "****" + phone.slice(-3);
+    }
+
+    function validatePhone(phone) {
+      return /^01[0-9]{8,9}$/.test(phone);
+    }
+
+    function toWhatsAppNumber(phone) {
+      if (!phone) return "";
+      return phone.replace(/^0/, "60");
+    }
+
+    function openWhatsApp(phone, message) {
+      const waPhone = toWhatsAppNumber(phone);
+      const encodedMsg = encodeURIComponent(message);
+      window.open(`https://wa.me/${waPhone}?text=${encodedMsg}`, "_blank");
+    }
+
+    function formatTime(seconds) {
+      const sec = Math.max(0, Number(seconds) || 0);
+      const min = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `${min}:${String(s).padStart(2, "0")}`;
+    }
+
+    function getMachineLabel(machineKey) {
+      return machineKey === "washer01" ? "Washer 1" : "Washer 2";
+    }
+
+    function getValidQueue(queueUsers) {
+      if (!Array.isArray(queueUsers)) return [];
+      return queueUsers.filter((q) => q && q.phone && q.phone.trim() !== "");
+    }
+
+    function getCurrentRemaining(machine) {
+      return machine?.currentUser?.timeLeft || 0;
+    }
+
+    function getQueueWaitingTime(machine, index) {
+      const currentRemaining = getCurrentRemaining(machine);
+      const waiting = currentRemaining + (index * TOTAL_SLOT);
+      return Math.ceil(waiting / 60);
+    }
+
+    function setStatusColor(status) {
+      const statusEl = document.getElementById("status");
+      const topStatus = document.getElementById("topStatus");
+
+      const map = {
+        AVAILABLE: ["#38bdf8", "#082f49", "#7dd3fc"],
+        BOOKED: ["#60a5fa", "#1e3a8a", "#bfdbfe"],
+        RUNNING: ["#22c55e", "#14532d", "#86efac"],
+        PAUSED: ["#f59e0b", "#78350f", "#fcd34d"],
+        ENDING: ["#a78bfa", "#3b0764", "#c4b5fd"],
+        DONE: ["#a78bfa", "#3b0764", "#c4b5fd"],
+        REPORTED: ["#ef4444", "#7f1d1d", "#fecaca"]
+      };
+
+      const colors = map[status] || ["#ffffff", "var(--pill-bg)", "var(--pill-text)"];
+
+      statusEl.style.color = colors[0];
+      topStatus.style.background = colors[1];
+      topStatus.style.color = colors[2];
+    }
+
+    function renderQueue(machine) {
+      const queueList = document.getElementById("queueList");
+      const validQueue = getValidQueue(machine.queueUsers);
+
+      if (validQueue.length === 0) {
+        queueList.innerHTML = "No queue";
+        return;
+      }
+
+      queueList.innerHTML = "";
+
+      validQueue.forEach((q, index) => {
+        const waitingMin = getQueueWaitingTime(machine, index);
+
+        queueList.innerHTML += `
+          <div class="queue-card">
+            <b>Queue ${index + 1}</b><br>
+            User: ${maskPhone(q.phone)}<br>
+            <small>Estimated waiting: ${waitingMin} min</small>
+          </div>
+        `;
+      });
+    }
+
+    function updateWhatsAppBox(machine) {
+      const box = document.getElementById("whatsappBox");
+
+      if (!machine || !machine.currentUser || !machine.currentUser.phone) {
+        box.classList.add("hidden");
+        return;
+      }
+
+      if (machine.status === "ENDING" || machine.status === "DONE") {
+        box.classList.remove("hidden");
+      } else {
+        box.classList.add("hidden");
+      }
+    }
+
+    function listenToMachine(machineKey) {
+      const machineRef = ref(db, `machines/${machineKey}`);
+
+      if (unsubscribe) unsubscribe();
+
+      unsubscribe = onValue(machineRef, (snapshot) => {
+        const data = snapshot.val();
+        latestMachineData = data;
+
+        const drum = document.getElementById("drum");
+        const bubbles = document.getElementById("bubbles");
+        const reportBadge = document.getElementById("reportBadge");
+
+        document.getElementById("machineName").innerText = getMachineLabel(machineKey);
+
+        if (!data) {
+          document.getElementById("status").innerText = "No data";
+          document.getElementById("topStatus").innerText = "No data";
+          document.getElementById("currentPhone").innerText = "-";
+          document.getElementById("timeLeft").innerText = "0:00";
+          document.getElementById("tempDisplay").innerText = "-";
+          document.getElementById("phaseDisplay").innerText = "IDLE";
+          document.getElementById("queueList").innerHTML = "No queue";
+          return;
+        }
+
+        const status = data.status || "AVAILABLE";
+        const phase = data.phase || "IDLE";
+        const timeLeft = data.currentUser?.timeLeft ?? 0;
+
+        if (
+          status === "RUNNING" &&
+          timeLeft <= 300 &&
+          timeLeft > 295 &&
+          !fiveMinNotified
+        ) {
+          fiveMinNotified = true;
+
+          notifyUser(
+            "DobiBuddy Reminder",
+            "5 minutes left for your laundry."
+          );
+        }
+
+        if (status !== "RUNNING") {
+          fiveMinNotified = false;
+        }
+
+        if (
+          status === "BOOKED" &&
+          timeLeft <= 300 &&
+          timeLeft > 295 &&
+          !queueNotified
+        ) {
+          queueNotified = true;
+
+          notifyUser(
+            "DobiBuddy Queue",
+            "Your washing slot is ready. Please start within 5 minutes."
+          );
+        }
+
+        if (status !== "BOOKED") {
+          queueNotified = false;
+        }
+
+        document.getElementById("status").innerText = status;
+        document.getElementById("topStatus").innerText = status;
+        document.getElementById("currentPhone").innerText = maskPhone(data.currentUser?.phone);
+        document.getElementById("timeLeft").innerText = formatTime(timeLeft);
+        document.getElementById("tempDisplay").innerText = data.temperature || "-";
+        document.getElementById("phaseDisplay").innerText = phase;
+
+        renderQueue(data);
+        setStatusColor(status);
+        updateWhatsAppBox(data);
+
+        drum.classList.remove("running", "paused");
+
+        if (status === "RUNNING") drum.classList.add("running");
+        if (status === "PAUSED") drum.classList.add("paused");
+
+        bubbles.style.display = status === "RUNNING" ? "block" : "none";
+        reportBadge.style.display = data.report?.isReported ? "inline-block" : "none";
+      });
+    }
+
+    async function bookMachine() {
+      const phone = document.getElementById("phone").value.trim();
+      const temperature = document.getElementById("temperature").value;
+      const message = document.getElementById("message");
+
+      const machineRef = ref(db, `machines/${selectedMachine}`);
+
+      message.innerText = "";
+
+      if (!selectedBlock) {
+        message.innerText = "Please select your blok kediaman first.";
+        return;
+      }
+
+      if (!validatePhone(phone)) {
+        message.innerText = "Invalid phone number. Example: 01234567890. Maximum 11 digits.";
+        return;
+      }
+
+      if (!temperature) {
+        message.innerText = "Please select temperature.";
+        return;
+      }
+
+      try {
+        const result = await runTransaction(machineRef, (machine) => {
+          if (!machine) return machine;
+
+          const validQueue = getValidQueue(machine.queueUsers);
+          const currentPhone = machine.currentUser?.phone || "";
+
+          if (!currentPhone) {
+            machine.currentUser = {
+              phone,
+              timeLeft: PREP_TIME,
+              block: selectedBlock
+            };
+
+            machine.temperature = temperature;
+            machine.status = "BOOKED";
+            machine.phase = "PREP";
+
+            machine.slot = {
+              totalTime: TOTAL_SLOT,
+              prepTime: PREP_TIME,
+              washTime: WASH_TIME,
+              endingTime: ENDING_TIME,
+              reservedAt: Date.now(),
+              startedAt: 0,
+              endingAt: 0
+            };
+
+            machine.runtime = {
+              isRunning: false,
+              isPaused: false
+            };
+
+            machine.notifications = {
+              fiveMinSent: false,
+              doneSent: false,
+              nextUserSent: false
+            };
+
+            machine.queueUsers = validQueue;
+
+            return machine;
+          }
+
+          if (validQueue.length >= 3) return;
+
+          validQueue.push({
+            phone,
+            block: selectedBlock,
+            bookedAt: Date.now(),
+            waitingTime: getCurrentRemaining(machine) + validQueue.length * TOTAL_SLOT
+          });
+
+          machine.queueUsers = validQueue;
+
+          return machine;
+        });
+
+        if (!result.committed) {
+          message.innerText = "Queue full. Maximum 3 users only.";
+          return;
+        }
+
+        const data = result.snapshot.val();
+
+        if (data.currentUser?.phone === phone) {
+          message.innerText = "Booking successful. Please start machine within 5 minutes.";
+        } else {
+          message.innerText = "Added into queue successfully.";
+        }
+
+        document.getElementById("phone").value = "";
+        document.getElementById("temperature").value = "";
+
+      } catch (error) {
+        console.error(error);
+        message.innerText = "Error: " + error.message;
+      }
+    }
+
+    async function reportMachine() {
+      const reportPhone = document.getElementById("reportPhone").value.trim();
+      const issueText = document.getElementById("issueText").value.trim();
+      const reportMessage = document.getElementById("reportMessage");
+
+      reportMessage.innerText = "";
+
+      if (!validatePhone(reportPhone)) {
+        reportMessage.innerText = "Invalid phone number. Example: 01234567890.";
+        return;
+      }
+
+      if (!issueText) {
+        reportMessage.innerText = "Please describe the machine problem.";
+        return;
+      }
+
+      try {
+        await update(ref(db, `machines/${selectedMachine}/report`), {
+          isReported: true,
+          reportedBy: reportPhone,
+          issue: issueText,
+          block: selectedBlock,
+          timestamp: Date.now()
+        });
+
+        reportMessage.innerText = `${getMachineLabel(selectedMachine)} has been reported successfully.`;
+
+        document.getElementById("reportPhone").value = "";
+        document.getElementById("issueText").value = "";
+
+      } catch (error) {
+        console.error(error);
+        reportMessage.innerText = "Error: " + error.message;
+      }
+    }
+
+    document.querySelectorAll(".block-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        selectBlock(btn.dataset.block);
+      });
+    });
+
+    document.getElementById("changeBlockBtn").addEventListener("click", backToBlockSelection);
+
+    document.querySelectorAll(".washer-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".washer-btn").forEach((b) => b.classList.remove("active"));
+
+        btn.classList.add("active");
+        selectedMachine = btn.dataset.machine;
+
+        document.getElementById("message").innerText = "";
+        document.getElementById("reportMessage").innerText = "";
+
+        listenToMachine(selectedMachine);
+      });
+    });
+
+    document.getElementById("openWhatsappBtn").addEventListener("click", () => {
+      if (!latestMachineData || !latestMachineData.currentUser?.phone) return;
+
+      openWhatsApp(
+        latestMachineData.currentUser.phone,
+        `DobiBuddy reminder: Your laundry at ${selectedBlock} ${getMachineLabel(selectedMachine)} is done. Please collect your clothes.`
+      );
+    });
+
+    document.getElementById("bookBtn").addEventListener("click", bookMachine);
+    document.getElementById("reportBtn").addEventListener("click", reportMachine);
+
+    document.getElementById("showReportBtn").addEventListener("click", () => {
+      const panel = document.getElementById("reportPanel");
+      panel.classList.toggle("hidden");
+
+      if (!panel.classList.contains("hidden")) {
+        panel.scrollIntoView({ behavior: "smooth" });
+      }
+    });
+
+    document.getElementById("enableNotifBtn").addEventListener("click", async () => {
+      if (!("Notification" in window)) {
+        alert("This browser does not support notifications.");
+        return;
+      }
+
+      const permission = await Notification.requestPermission();
+
+      if (permission === "granted") {
+        alert("Notification enabled.");
+      } else {
+        alert("Notification blocked.");
+      }
+    });
+
+    document.getElementById("themeToggle").addEventListener("click", () => {
+      document.body.classList.toggle("dark");
+
+      localStorage.setItem(
+        "theme",
+        document.body.classList.contains("dark") ? "dark" : "light"
+      );
+
+      updateThemeButton();
+    });
+
+    setInitialTheme();
+
+    const savedBlock = localStorage.getItem("selectedBlock");
+    if (savedBlock) selectBlock(savedBlock);
+  </script>
+</body>
+</html>

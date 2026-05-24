@@ -1,0 +1,360 @@
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <Firebase_ESP_Client.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_ST7735.h>
+#include <SPI.h>
+
+// =========================
+// WIFI
+// =========================
+#define WIFI_SSID "Wi-Fi@Tuah"
+#define WIFI_PASSWORD ""
+
+// =========================
+// FIREBASE
+// =========================
+#define API_KEY "AIzaSyBLbYpP0xEjgO0iMDBlTnq2rX9TmVtE6C4"
+#define DATABASE_URL "https://dobibuddy-default-rtdb.asia-southeast1.firebasedatabase.app/"
+
+FirebaseData fbdo;
+FirebaseAuth auth;
+FirebaseConfig config;
+
+// =========================
+// TELEGRAM
+// =========================
+String botToken = "8201283434:AAEmfzg5wo8nah-RH7e3S-WRfoZrU8D5F_4";
+
+// =========================
+// MACHINE PATH
+// =========================
+String path = "/machines/washer01";
+
+// =========================
+// ST7735S TFT PINS
+// Your wiring:
+// SCL -> GPIO18
+// SDA -> GPIO23
+// CS  -> GPIO5
+// DC  -> GPIO4
+// BLK -> GPIO21
+// RST -> GPIO2
+// =========================
+#define TFT_CS   5
+#define TFT_DC   4
+#define TFT_RST  2
+#define TFT_BLK  21
+
+Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
+
+// =========================
+// PHYSICAL CONTROL BUTTON
+// GPIO13 to GND
+// BOOKED  -> RUNNING
+// RUNNING -> PAUSED
+// PAUSED  -> RUNNING
+// =========================
+#define CONTROL_BTN 13
+bool lastButtonState = HIGH;
+unsigned long lastDebounceTime = 0;
+const unsigned long debounceDelay = 250;
+
+// =========================
+// TIMER
+// =========================
+unsigned long lastTick = 0;
+const int interval = 1000;
+
+// =========================
+// HELPERS
+// =========================
+String maskPhone(String phone) {
+  if (phone.length() <= 6) return phone;
+  return phone.substring(0, 3) + "****" + phone.substring(phone.length() - 3);
+}
+
+void sendTelegram(String chatId, String message) {
+  if (chatId == "") {
+    Serial.println("Telegram skipped: empty chat ID");
+    return;
+  }
+
+  HTTPClient http;
+  message.replace(" ", "%20");
+
+  String url = "https://api.telegram.org/bot" + botToken +
+               "/sendMessage?chat_id=" + chatId +
+               "&text=" + message;
+
+  Serial.println("Sending Telegram...");
+  http.begin(url);
+  int httpCode = http.GET();
+  Serial.print("Telegram HTTP code: ");
+  Serial.println(httpCode);
+  http.end();
+}
+
+void drawDisplay(String status, int timeLeft, String phone) {
+  tft.fillScreen(ST77XX_BLACK);
+  tft.setTextWrap(false);
+  tft.setTextSize(1);
+
+  tft.setTextColor(ST77XX_WHITE);
+  tft.setCursor(5, 5);
+  tft.println("DobiBuddy");
+  tft.drawLine(0, 15, 160, 15, ST77XX_WHITE);
+
+  tft.setCursor(5, 25);
+
+  if (status == "RUNNING") tft.setTextColor(ST77XX_GREEN);
+  else if (status == "PAUSED") tft.setTextColor(ST77XX_YELLOW);
+  else if (status == "AVAILABLE") tft.setTextColor(ST77XX_CYAN);
+  else if (status == "BOOKED") tft.setTextColor(ST77XX_BLUE);
+  else if (status == "REPORTED") tft.setTextColor(ST77XX_RED);
+  else tft.setTextColor(ST77XX_WHITE);
+
+  tft.print("Status: ");
+  tft.println(status);
+
+  tft.setTextColor(ST77XX_WHITE);
+  tft.setCursor(5, 45);
+  tft.print("Time: ");
+  tft.print(timeLeft);
+  tft.println(" s");
+
+  tft.setCursor(5, 65);
+  tft.print("User:");
+  tft.setCursor(5, 80);
+  tft.println(maskPhone(phone));
+
+  if (status == "BOOKED") {
+    tft.setTextColor(ST77XX_BLUE);
+    tft.setCursor(5, 105);
+    tft.println("PRESS START");
+  }
+
+  if (status == "RUNNING" && timeLeft <= 300 && timeLeft > 0) {
+    tft.setTextColor(ST77XX_RED);
+    tft.setCursor(5, 105);
+    tft.println("5 MIN LEFT!");
+  }
+
+  if (status == "PAUSED") {
+    tft.setTextColor(ST77XX_YELLOW);
+    tft.setCursor(5, 105);
+    tft.println("EMERGENCY STOP");
+  }
+
+  if (status == "AVAILABLE") {
+    tft.setTextColor(ST77XX_CYAN);
+    tft.setCursor(5, 105);
+    tft.println("READY");
+  }
+
+  if (status == "REPORTED") {
+    tft.setTextColor(ST77XX_RED);
+    tft.setCursor(5, 105);
+    tft.println("REPORTED");
+  }
+}
+
+void handleControlButton() {
+  bool reading = digitalRead(CONTROL_BTN);
+
+  if (reading != lastButtonState) {
+    lastDebounceTime = millis();
+  }
+
+  if ((millis() - lastDebounceTime) > debounceDelay) {
+    if (lastButtonState == HIGH && reading == LOW) {
+      Serial.println("Physical button pressed");
+
+      if (Firebase.RTDB.getString(&fbdo, path + "/status")) {
+        String currentStatus = fbdo.stringData();
+        Serial.print("Current status: ");
+        Serial.println(currentStatus);
+
+        if (currentStatus == "BOOKED") {
+          Firebase.RTDB.setString(&fbdo, path + "/status", "RUNNING");
+          Firebase.RTDB.setBool(&fbdo, path + "/runtime/isRunning", true);
+          Firebase.RTDB.setBool(&fbdo, path + "/runtime/isPaused", false);
+
+          Firebase.RTDB.getString(&fbdo, path + "/currentUser/telegramId");
+          String chatId = fbdo.stringData();
+          sendTelegram(chatId, "▶️ Laundry started.");
+        }
+        else if (currentStatus == "RUNNING") {
+          Firebase.RTDB.setString(&fbdo, path + "/status", "PAUSED");
+          Firebase.RTDB.setBool(&fbdo, path + "/runtime/isRunning", false);
+          Firebase.RTDB.setBool(&fbdo, path + "/runtime/isPaused", true);
+
+          Firebase.RTDB.getString(&fbdo, path + "/currentUser/telegramId");
+          String chatId = fbdo.stringData();
+          sendTelegram(chatId, "⚠️ Laundry paused. Emergency stop activated.");
+        }
+        else if (currentStatus == "PAUSED") {
+          Firebase.RTDB.setString(&fbdo, path + "/status", "RUNNING");
+          Firebase.RTDB.setBool(&fbdo, path + "/runtime/isRunning", true);
+          Firebase.RTDB.setBool(&fbdo, path + "/runtime/isPaused", false);
+
+          Firebase.RTDB.getString(&fbdo, path + "/currentUser/telegramId");
+          String chatId = fbdo.stringData();
+          sendTelegram(chatId, "▶️ Laundry resumed.");
+        }
+      } else {
+        Serial.println("Button status read failed:");
+        Serial.println(fbdo.errorReason());
+      }
+    }
+  }
+
+  lastButtonState = reading;
+}
+
+// =========================
+// SETUP
+// =========================
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
+  Serial.println("ESP32 starting...");
+
+  pinMode(CONTROL_BTN, INPUT_PULLUP);
+
+  pinMode(TFT_BLK, OUTPUT);
+  digitalWrite(TFT_BLK, HIGH);
+
+  tft.initR(INITR_GREENTAB);   // try BLACKTAB/REDTAB if needed
+  tft.setRotation(1);
+  drawDisplay("BOOTING", 0, "");
+
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  Serial.print("Connecting WiFi");
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println();
+  Serial.println("WiFi connected");
+  Serial.println(WiFi.localIP());
+
+  drawDisplay("WIFI OK", 0, "");
+
+  config.api_key = API_KEY;
+  config.database_url = DATABASE_URL;
+
+  if (Firebase.signUp(&config, &auth, "", "")) {
+    Serial.println("Firebase anonymous sign-up OK");
+  } else {
+    Serial.printf("Firebase sign-up failed: %s\n", config.signer.signupError.message.c_str());
+  }
+
+  Firebase.begin(&config, &auth);
+  Firebase.reconnectWiFi(true);
+
+  Serial.println("Firebase started");
+  drawDisplay("READY", 0, "");
+}
+
+// =========================
+// LOOP
+// =========================
+void loop() {
+  handleControlButton();
+
+  if (Firebase.ready() && millis() - lastTick > interval) {
+    lastTick = millis();
+
+    if (Firebase.RTDB.getJSON(&fbdo, path)) {
+      FirebaseJson json = fbdo.jsonObject();
+
+      FirebaseJsonData statusData, timeData, phoneData, chatData;
+      FirebaseJsonData fiveMinData, doneData;
+
+      json.get(statusData, "status");
+      json.get(timeData, "currentUser/timeLeft");
+      json.get(phoneData, "currentUser/phone");
+      json.get(chatData, "currentUser/telegramId");
+      json.get(fiveMinData, "notifications/fiveMinSent");
+      json.get(doneData, "notifications/doneSent");
+
+      String status = statusData.stringValue;
+      int timeLeft = timeData.intValue;
+      String phone = phoneData.stringValue;
+      String chatId = chatData.stringValue;
+      bool fiveMinSent = fiveMinData.boolValue;
+      bool doneSent = doneData.boolValue;
+
+      Serial.println("----- FIREBASE DATA -----");
+      Serial.print("Status: "); Serial.println(status);
+      Serial.print("Time Left: "); Serial.println(timeLeft);
+      Serial.print("Phone: "); Serial.println(phone);
+      Serial.print("Chat ID: "); Serial.println(chatId);
+      Serial.println("-------------------------");
+
+      drawDisplay(status, timeLeft, phone);
+
+      if (status == "RUNNING") {
+        if (timeLeft > 0) {
+          timeLeft--;
+          Firebase.RTDB.setInt(&fbdo, path + "/currentUser/timeLeft", timeLeft);
+        }
+
+        if (timeLeft == 300 && !fiveMinSent) {
+          sendTelegram(chatId, "⏳ 5 minutes left for your laundry!");
+          Firebase.RTDB.setBool(&fbdo, path + "/notifications/fiveMinSent", true);
+        }
+
+        if (timeLeft == 0 && !doneSent) {
+          sendTelegram(chatId, "✅ Your cloth is done!");
+          Firebase.RTDB.setBool(&fbdo, path + "/notifications/doneSent", true);
+
+          String nextPhone = "";
+          String nextTelegram = "";
+
+          if (Firebase.RTDB.getJSON(&fbdo, path + "/queueUser")) {
+            FirebaseJson queueJson = fbdo.jsonObject();
+            FirebaseJsonData qPhone, qTelegram;
+            queueJson.get(qPhone, "phone");
+            queueJson.get(qTelegram, "telegramId");
+            nextPhone = qPhone.stringValue;
+            nextTelegram = qTelegram.stringValue;
+          }
+
+          Firebase.RTDB.setString(&fbdo, path + "/currentUser/phone", "");
+          Firebase.RTDB.setString(&fbdo, path + "/currentUser/telegramId", "");
+          Firebase.RTDB.setInt(&fbdo, path + "/currentUser/timeLeft", 0);
+
+          Firebase.RTDB.setBool(&fbdo, path + "/notifications/fiveMinSent", false);
+          Firebase.RTDB.setBool(&fbdo, path + "/notifications/doneSent", false);
+
+          Firebase.RTDB.setBool(&fbdo, path + "/runtime/isRunning", false);
+          Firebase.RTDB.setBool(&fbdo, path + "/runtime/isPaused", false);
+
+          if (nextPhone != "") {
+            Firebase.RTDB.setString(&fbdo, path + "/currentUser/phone", nextPhone);
+            Firebase.RTDB.setString(&fbdo, path + "/currentUser/telegramId", nextTelegram);
+            Firebase.RTDB.setInt(&fbdo, path + "/currentUser/timeLeft", 1500);
+
+            Firebase.RTDB.setString(&fbdo, path + "/queueUser/phone", "");
+            Firebase.RTDB.setString(&fbdo, path + "/queueUser/telegramId", "");
+
+            Firebase.RTDB.setString(&fbdo, path + "/status", "BOOKED");
+
+            sendTelegram(nextTelegram, "🧺 Your turn is next. Please press the machine START button.");
+          } else {
+            Firebase.RTDB.setString(&fbdo, path + "/status", "AVAILABLE");
+          }
+        }
+      }
+
+    } else {
+      Serial.println("Firebase read FAILED");
+      Serial.println(fbdo.errorReason());
+      drawDisplay("FB ERROR", 0, "");
+    }
+  }
+}

@@ -1,0 +1,807 @@
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <Firebase_ESP_Client.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_ST7735.h>
+#include <SPI.h>
+
+// =========================
+// WIFI
+// =========================
+#define WIFI_SSID "Wi-Fi@Tuah"
+#define WIFI_PASSWORD ""
+
+// =========================
+// FIREBASE
+// =========================
+#define API_KEY "AIzaSyBLbYpP0xEjgO0iMDBlTnq2rX9TmVtE6C4"
+#define DATABASE_URL "https://dobibuddy-default-rtdb.asia-southeast1.firebasedatabase.app"
+
+// =========================
+// FIREBASE OBJECT
+// =========================
+FirebaseData fbdo;
+FirebaseAuth auth;
+FirebaseConfig config;
+
+// =========================
+// TELEGRAM
+// =========================
+String botToken = "8201283434:AAEmfzg5wo8nah-RH7e3S-WRfoZrU8D5F_4";
+
+// =========================
+// MACHINE PATH
+// =========================
+String path = "/machines/washer01";
+
+// =========================
+// TFT ST7735S
+// =========================
+#define TFT_CS   5
+#define TFT_DC   4
+#define TFT_RST  2
+#define TFT_BLK  21
+
+Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
+
+// =========================
+// BUTTON
+// =========================
+#define CONTROL_BTN 13
+
+bool lastButtonState = HIGH;
+unsigned long lastDebounceTime = 0;
+const unsigned long debounceDelay = 250;
+
+// =========================
+// TIMER
+// =========================
+unsigned long lastTick = 0;
+const int interval = 1000;
+
+// =========================
+// HELPERS
+// =========================
+String maskPhone(String phone) {
+
+  if (phone.length() <= 6)
+    return phone;
+
+  return phone.substring(0, 3)
+         + "****"
+         + phone.substring(phone.length() - 3);
+}
+
+void sendTelegram(String chatId, String message) {
+
+  if (chatId == "") return;
+
+  HTTPClient http;
+
+  message.replace(" ", "%20");
+
+  String url =
+    "https://api.telegram.org/bot"
+    + botToken
+    + "/sendMessage?chat_id="
+    + chatId
+    + "&text="
+    + message;
+
+  http.begin(url);
+
+  int httpCode = http.GET();
+
+  Serial.print("Telegram HTTP: ");
+  Serial.println(httpCode);
+
+  http.end();
+}
+
+// =========================
+// DISPLAY
+// =========================
+void drawDisplay(
+  String status,
+  int timeLeft,
+  String phone
+) {
+
+  tft.fillScreen(ST77XX_BLACK);
+
+  tft.setTextWrap(false);
+
+  tft.setTextSize(1);
+
+  tft.setCursor(5, 5);
+
+  tft.setTextColor(ST77XX_WHITE);
+
+  tft.println("DobiBuddy");
+
+  tft.drawLine(
+    0,
+    15,
+    160,
+    15,
+    ST77XX_WHITE
+  );
+
+  tft.setCursor(5, 25);
+
+  if (status == "RUNNING")
+    tft.setTextColor(ST77XX_GREEN);
+
+  else if (status == "PAUSED")
+    tft.setTextColor(ST77XX_YELLOW);
+
+  else if (status == "BOOKED")
+    tft.setTextColor(ST77XX_BLUE);
+
+  else if (status == "ENDING")
+    tft.setTextColor(ST77XX_MAGENTA);
+
+  else if (status == "AVAILABLE")
+    tft.setTextColor(ST77XX_CYAN);
+
+  else
+    tft.setTextColor(ST77XX_WHITE);
+
+  tft.print("Status: ");
+  tft.println(status);
+
+  tft.setTextColor(ST77XX_WHITE);
+
+  tft.setCursor(5, 45);
+
+  tft.print("Time: ");
+  tft.print(timeLeft);
+  tft.println(" s");
+
+  tft.setCursor(5, 65);
+
+  tft.print("User:");
+
+  tft.setCursor(5, 80);
+
+  tft.println(maskPhone(phone));
+
+  if (status == "BOOKED") {
+
+    tft.setTextColor(ST77XX_BLUE);
+
+    tft.setCursor(5, 105);
+
+    tft.println("START IN 5 MIN");
+  }
+
+  if (status == "RUNNING") {
+
+    tft.setTextColor(ST77XX_GREEN);
+
+    tft.setCursor(5, 105);
+
+    tft.println("WASHING");
+  }
+
+  if (status == "PAUSED") {
+
+    tft.setTextColor(ST77XX_YELLOW);
+
+    tft.setCursor(5, 105);
+
+    tft.println("EMERGENCY");
+  }
+
+  if (status == "ENDING") {
+
+    tft.setTextColor(ST77XX_MAGENTA);
+
+    tft.setCursor(5, 105);
+
+    tft.println("COLLECT CLOTH");
+  }
+
+  if (status == "AVAILABLE") {
+
+    tft.setTextColor(ST77XX_CYAN);
+
+    tft.setCursor(5, 105);
+
+    tft.println("READY");
+  }
+}
+
+// =========================
+// PROMOTE NEXT USER
+// =========================
+void promoteNextUser() {
+
+  String nextPhone = "";
+  String nextTelegram = "";
+
+  if (
+    Firebase.RTDB.getJSON(
+      &fbdo,
+      path + "/queueUsers/0"
+    )
+  ) {
+
+    FirebaseJson queueJson =
+      fbdo.jsonObject();
+
+    FirebaseJsonData qPhone;
+    FirebaseJsonData qTelegram;
+
+    queueJson.get(qPhone, "phone");
+    queueJson.get(qTelegram, "telegramId");
+
+    nextPhone = qPhone.stringValue;
+    nextTelegram = qTelegram.stringValue;
+  }
+
+  // CLEAR CURRENT USER
+  Firebase.RTDB.setString(
+    &fbdo,
+    path + "/currentUser/phone",
+    ""
+  );
+
+  Firebase.RTDB.setString(
+    &fbdo,
+    path + "/currentUser/telegramId",
+    ""
+  );
+
+  Firebase.RTDB.setInt(
+    &fbdo,
+    path + "/currentUser/timeLeft",
+    0
+  );
+
+  // RESET FLAGS
+  Firebase.RTDB.setBool(
+    &fbdo,
+    path + "/notifications/fiveMinSent",
+    false
+  );
+
+  Firebase.RTDB.setBool(
+    &fbdo,
+    path + "/notifications/doneSent",
+    false
+  );
+
+  Firebase.RTDB.setBool(
+    &fbdo,
+    path + "/runtime/isRunning",
+    false
+  );
+
+  Firebase.RTDB.setBool(
+    &fbdo,
+    path + "/runtime/isPaused",
+    false
+  );
+
+  // =========================
+  // PROMOTE QUEUE
+  // =========================
+  if (nextPhone != "") {
+
+    Firebase.RTDB.setString(
+      &fbdo,
+      path + "/currentUser/phone",
+      nextPhone
+    );
+
+    Firebase.RTDB.setString(
+      &fbdo,
+      path + "/currentUser/telegramId",
+      nextTelegram
+    );
+
+    // 5 min prep
+    Firebase.RTDB.setInt(
+      &fbdo,
+      path + "/currentUser/timeLeft",
+      300
+    );
+
+    Firebase.RTDB.setString(
+      &fbdo,
+      path + "/status",
+      "BOOKED"
+    );
+
+    Firebase.RTDB.setString(
+      &fbdo,
+      path + "/phase",
+      "PREP"
+    );
+
+    sendTelegram(
+      nextTelegram,
+      "🧺 Your slot is ready. Start within 5 minutes."
+    );
+
+  } else {
+
+    Firebase.RTDB.setString(
+      &fbdo,
+      path + "/status",
+      "AVAILABLE"
+    );
+
+    Firebase.RTDB.setString(
+      &fbdo,
+      path + "/phase",
+      "IDLE"
+    );
+  }
+}
+
+// =========================
+// BUTTON CONTROL
+// =========================
+void handleControlButton() {
+
+  bool reading =
+    digitalRead(CONTROL_BTN);
+
+  if (reading != lastButtonState) {
+
+    lastDebounceTime = millis();
+  }
+
+  if (
+    (millis() - lastDebounceTime)
+    > debounceDelay
+  ) {
+
+    if (
+      lastButtonState == HIGH
+      && reading == LOW
+    ) {
+
+      Serial.println(
+        "BUTTON PRESSED"
+      );
+
+      if (
+        Firebase.RTDB.getString(
+          &fbdo,
+          path + "/status"
+        )
+      ) {
+
+        String currentStatus =
+          fbdo.stringData();
+
+        Firebase.RTDB.getString(
+          &fbdo,
+          path + "/currentUser/telegramId"
+        );
+
+        String chatId =
+          fbdo.stringData();
+
+        // =========================
+        // START MACHINE
+        // =========================
+        if (
+          currentStatus == "BOOKED"
+        ) {
+
+          Firebase.RTDB.setString(
+            &fbdo,
+            path + "/status",
+            "RUNNING"
+          );
+
+          Firebase.RTDB.setString(
+            &fbdo,
+            path + "/phase",
+            "RUNNING"
+          );
+
+          Firebase.RTDB.setBool(
+            &fbdo,
+            path + "/runtime/isRunning",
+            true
+          );
+
+          Firebase.RTDB.setBool(
+            &fbdo,
+            path + "/runtime/isPaused",
+            false
+          );
+
+          // 30 min washing
+          Firebase.RTDB.setInt(
+            &fbdo,
+            path + "/currentUser/timeLeft",
+            1800
+          );
+
+          sendTelegram(
+            chatId,
+            "▶️ Laundry started."
+          );
+        }
+
+        // =========================
+        // PAUSE
+        // =========================
+        else if (
+          currentStatus == "RUNNING"
+        ) {
+
+          Firebase.RTDB.setString(
+            &fbdo,
+            path + "/status",
+            "PAUSED"
+          );
+
+          Firebase.RTDB.setBool(
+            &fbdo,
+            path + "/runtime/isPaused",
+            true
+          );
+
+          sendTelegram(
+            chatId,
+            "⚠️ Emergency stop activated."
+          );
+        }
+
+        // =========================
+        // RESUME
+        // =========================
+        else if (
+          currentStatus == "PAUSED"
+        ) {
+
+          Firebase.RTDB.setString(
+            &fbdo,
+            path + "/status",
+            "RUNNING"
+          );
+
+          Firebase.RTDB.setBool(
+            &fbdo,
+            path + "/runtime/isPaused",
+            false
+          );
+
+          sendTelegram(
+            chatId,
+            "▶️ Laundry resumed."
+          );
+        }
+      }
+    }
+  }
+
+  lastButtonState = reading;
+}
+
+// =========================
+// SETUP
+// =========================
+void setup() {
+
+  Serial.begin(115200);
+
+  pinMode(
+    CONTROL_BTN,
+    INPUT_PULLUP
+  );
+
+  pinMode(TFT_BLK, OUTPUT);
+
+  digitalWrite(TFT_BLK, HIGH);
+
+  tft.initR(INITR_GREENTAB);
+
+  tft.setRotation(1);
+
+  tft.fillScreen(ST77XX_BLACK);
+
+  tft.setTextColor(ST77XX_GREEN);
+
+  tft.setCursor(10, 30);
+
+  tft.setTextSize(2);
+
+  tft.println("BOOTING");
+
+  WiFi.begin(
+    WIFI_SSID,
+    WIFI_PASSWORD
+  );
+
+  while (
+    WiFi.status()
+    != WL_CONNECTED
+  ) {
+
+    delay(500);
+
+    Serial.print(".");
+  }
+
+  Serial.println();
+  Serial.println("WIFI CONNECTED");
+
+  config.api_key = API_KEY;
+
+  config.database_url =
+    DATABASE_URL;
+
+  if (
+    Firebase.signUp(
+      &config,
+      &auth,
+      "",
+      ""
+    )
+  ) {
+
+    Serial.println(
+      "Firebase OK"
+    );
+  }
+
+  Firebase.begin(
+    &config,
+    &auth
+  );
+
+  Firebase.reconnectWiFi(true);
+
+  tft.fillScreen(ST77XX_BLACK);
+
+  tft.setTextSize(1);
+
+  tft.setCursor(5, 20);
+
+  tft.println("SYSTEM READY");
+}
+
+// =========================
+// LOOP
+// =========================
+void loop() {
+
+  handleControlButton();
+
+  if (
+    Firebase.ready()
+    && millis() - lastTick > interval
+  ) {
+
+    lastTick = millis();
+
+    if (
+      Firebase.RTDB.getJSON(
+        &fbdo,
+        path
+      )
+    ) {
+
+      FirebaseJson json =
+        fbdo.jsonObject();
+
+      FirebaseJsonData statusData;
+      FirebaseJsonData timeData;
+      FirebaseJsonData phoneData;
+      FirebaseJsonData chatData;
+      FirebaseJsonData fiveMinData;
+      FirebaseJsonData doneData;
+
+      json.get(
+        statusData,
+        "status"
+      );
+
+      json.get(
+        timeData,
+        "currentUser/timeLeft"
+      );
+
+      json.get(
+        phoneData,
+        "currentUser/phone"
+      );
+
+      json.get(
+        chatData,
+        "currentUser/telegramId"
+      );
+
+      json.get(
+        fiveMinData,
+        "notifications/fiveMinSent"
+      );
+
+      json.get(
+        doneData,
+        "notifications/doneSent"
+      );
+
+      String status =
+        statusData.stringValue;
+
+      int timeLeft =
+        timeData.intValue;
+
+      String phone =
+        phoneData.stringValue;
+
+      String chatId =
+        chatData.stringValue;
+
+      bool fiveMinSent =
+        fiveMinData.boolValue;
+
+      bool doneSent =
+        doneData.boolValue;
+
+      drawDisplay(
+        status,
+        timeLeft,
+        phone
+      );
+
+      // =========================
+      // BOOKED PHASE
+      // =========================
+      if (
+        status == "BOOKED"
+      ) {
+
+        if (timeLeft > 0) {
+
+          timeLeft--;
+
+          Firebase.RTDB.setInt(
+            &fbdo,
+            path +
+            "/currentUser/timeLeft",
+            timeLeft
+          );
+        }
+
+        if (timeLeft <= 0) {
+
+          sendTelegram(
+            chatId,
+            "❌ Slot expired."
+          );
+
+          promoteNextUser();
+        }
+      }
+
+      // =========================
+      // RUNNING
+      // =========================
+      if (
+        status == "RUNNING"
+      ) {
+
+        bool isPaused = false;
+
+        if (
+          Firebase.RTDB.getBool(
+            &fbdo,
+            path +
+            "/runtime/isPaused"
+          )
+        ) {
+
+          isPaused =
+            fbdo.boolData();
+        }
+
+        if (!isPaused) {
+
+          if (timeLeft > 0) {
+
+            timeLeft--;
+
+            Firebase.RTDB.setInt(
+              &fbdo,
+              path +
+              "/currentUser/timeLeft",
+              timeLeft
+            );
+          }
+
+          // 5 min left
+          if (
+            timeLeft == 300
+            && !fiveMinSent
+          ) {
+
+            sendTelegram(
+              chatId,
+              "⏳ 5 minutes left!"
+            );
+
+            Firebase.RTDB.setBool(
+              &fbdo,
+              path +
+              "/notifications/fiveMinSent",
+              true
+            );
+          }
+
+          // DONE WASHING
+          if (
+            timeLeft <= 0
+            && !doneSent
+          ) {
+
+            Firebase.RTDB.setString(
+              &fbdo,
+              path + "/status",
+              "ENDING"
+            );
+
+            Firebase.RTDB.setString(
+              &fbdo,
+              path + "/phase",
+              "ENDING"
+            );
+
+            Firebase.RTDB.setInt(
+              &fbdo,
+              path +
+              "/currentUser/timeLeft",
+              300
+            );
+
+            Firebase.RTDB.setBool(
+              &fbdo,
+              path +
+              "/notifications/doneSent",
+              true
+            );
+
+            sendTelegram(
+              chatId,
+              "✅ Washing done. Collect within 5 minutes."
+            );
+          }
+        }
+      }
+
+      // =========================
+      // ENDING BUFFER
+      // =========================
+      if (
+        status == "ENDING"
+      ) {
+
+        if (timeLeft > 0) {
+
+          timeLeft--;
+
+          Firebase.RTDB.setInt(
+            &fbdo,
+            path +
+            "/currentUser/timeLeft",
+            timeLeft
+          );
+        }
+
+        if (timeLeft <= 0) {
+
+          promoteNextUser();
+        }
+      }
+    }
+  }
+}
