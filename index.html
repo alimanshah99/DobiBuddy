@@ -481,6 +481,7 @@
 </head>
 
 <body>
+  <audio id="notifSound" src="notification.mp3" preload="auto"></audio>
   <div class="welcome-page" id="welcomePage">
     <div class="welcome-card">
       <h1 class="welcome-title">DobiBuddy</h1>
@@ -567,12 +568,6 @@
             <div class="info-label">Phase</div>
             <div class="info-value" id="phaseDisplay">IDLE</div>
           </div>
-        </div>
-
-        <div id="whatsappBox" class="panel hidden" style="margin-top:16px; margin-bottom:0;">
-          <div class="section-title">WhatsApp Reminder</div>
-          <button class="wa-btn" id="openWhatsappBtn">Open WhatsApp Reminder</button>
-          <div class="note">This opens WhatsApp with a ready-made message.</div>
         </div>
 
         <div class="panel" style="margin-top:16px; margin-bottom:0;">
@@ -673,6 +668,9 @@
     function notifyUser(title, message) {
       alert(message);
 
+      const sound = document.getElementById("notifSound");
+      if (sound) sound.play().catch(() => {});
+
       if ("Notification" in window && Notification.permission === "granted") {
         new Notification(title, {
           body: message,
@@ -730,17 +728,6 @@
 
     function validatePhone(phone) {
       return /^01[0-9]{8,9}$/.test(phone);
-    }
-
-    function toWhatsAppNumber(phone) {
-      if (!phone) return "";
-      return phone.replace(/^0/, "60");
-    }
-
-    function openWhatsApp(phone, message) {
-      const waPhone = toWhatsAppNumber(phone);
-      const encodedMsg = encodeURIComponent(message);
-      window.open(`https://wa.me/${waPhone}?text=${encodedMsg}`, "_blank");
     }
 
     function formatTime(seconds) {
@@ -814,21 +801,6 @@
           </div>
         `;
       });
-    }
-
-    function updateWhatsAppBox(machine) {
-      const box = document.getElementById("whatsappBox");
-
-      if (!machine || !machine.currentUser || !machine.currentUser.phone) {
-        box.classList.add("hidden");
-        return;
-      }
-
-      if (machine.status === "ENDING" || machine.status === "DONE") {
-        box.classList.remove("hidden");
-      } else {
-        box.classList.add("hidden");
-      }
     }
 
     function listenToMachine(machineKey) {
@@ -907,7 +879,6 @@
 
         renderQueue(data);
         setStatusColor(status);
-        updateWhatsAppBox(data);
 
         drum.classList.remove("running", "paused");
 
@@ -1085,14 +1056,6 @@
       });
     });
 
-    document.getElementById("openWhatsappBtn").addEventListener("click", () => {
-      if (!latestMachineData || !latestMachineData.currentUser?.phone) return;
-
-      openWhatsApp(
-        latestMachineData.currentUser.phone,
-        `DobiBuddy reminder: Your laundry at ${selectedBlock} ${getMachineLabel(selectedMachine)} is done. Please collect your clothes.`
-      );
-    });
 
     document.getElementById("bookBtn").addEventListener("click", bookMachine);
     document.getElementById("reportBtn").addEventListener("click", reportMachine);
