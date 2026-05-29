@@ -1,88 +1,231 @@
 {
-  "machines": {
-    "washer01": {
-      "status": "AVAILABLE",
-      "phase": "IDLE",
-      "temperature": "",
-
-      "currentUser": {
-        "phone": "",
-        "timeLeft": 0,
-        "block": ""
-      },
-
-      "queueUsers": [],
-
-      "runtime": {
-        "isRunning": false,
-        "isPaused": false
-      },
-
-      "notifications": {
-        "fiveMinSent": false,
-        "doneSent": false,
-        "nextUserSent": false
-      },
-
-      "slot": {
-        "totalTime": 2400,
-        "prepTime": 300,
-        "washTime": 1800,
-        "endingTime": 300,
-        "reservedAt": 0,
-        "startedAt": 0,
-        "endingAt": 0
-      },
-
-      "report": {
-        "isReported": false,
-        "reportedBy": "",
-        "issue": "",
-        "block": "",
-        "timestamp": 0
+  "blocks": {
+    "tuah": {
+      "machines": {
+        "washer01": {
+          "status": "AVAILABLE",
+          "phase": "IDLE",
+          "temperature": "",
+          "currentUser": {
+            "phone": "",
+            "timeLeft": 0,
+            "block": ""
+          },
+          "queueUsers": [],
+          "runtime": {
+            "isRunning": false,
+            "isPaused": false
+          },
+          "notifications": {
+            "fiveMinSent": false,
+            "doneSent": false,
+            "nextUserSent": false
+          },
+          "slot": {
+            "totalTime": 2400,
+            "prepTime": 300,
+            "washTime": 1800,
+            "endingTime": 300,
+            "reservedAt": 0,
+            "startedAt": 0,
+            "endingAt": 0
+          },
+          "report": {
+            "isReported": false,
+            "reportedBy": "",
+            "issue": "",
+            "block": "",
+            "timestamp": 0
+          }
+        },
+        "washer02": {
+          "status": "AVAILABLE",
+          "phase": "IDLE",
+          "temperature": "",
+          "currentUser": {
+            "phone": "",
+            "timeLeft": 0,
+            "block": ""
+          },
+          "queueUsers": [],
+          "runtime": {
+            "isRunning": false,
+            "isPaused": false
+          },
+          "notifications": {
+            "fiveMinSent": false,
+            "doneSent": false,
+            "nextUserSent": false
+          },
+          "slot": {
+            "totalTime": 2400,
+            "prepTime": 300,
+            "washTime": 1800,
+            "endingTime": 300,
+            "reservedAt": 0,
+            "startedAt": 0,
+            "endingAt": 0
+          },
+          "report": {
+            "isReported": false,
+            "reportedBy": "",
+            "issue": "",
+            "block": "",
+            "timestamp": 0
+          }
+        }
       }
     },
-
-    "washer02": {
-      "status": "AVAILABLE",
-      "phase": "IDLE",
-      "temperature": "",
-
-      "currentUser": {
-        "phone": "",
-        "timeLeft": 0,
-        "block": ""
-      },
-
-      "queueUsers": [],
-
-      "runtime": {
-        "isRunning": false,
-        "isPaused": false
-      },
-
-      "notifications": {
-        "fiveMinSent": false,
-        "doneSent": false,
-        "nextUserSent": false
-      },
-
-      "slot": {
-        "totalTime": 2400,
-        "prepTime": 300,
-        "washTime": 1800,
-        "endingTime": 300,
-        "reservedAt": 0,
-        "startedAt": 0,
-        "endingAt": 0
-      },
-
-      "report": {
-        "isReported": false,
-        "reportedBy": "",
-        "issue": "",
-        "block": "",
-        "timestamp": 0
+    "srikandi": {
+      "machines": {
+        "washer01": {
+          "status": "AVAILABLE",
+          "phase": "IDLE",
+          "temperature": "",
+          "currentUser": {
+            "phone": "",
+            "timeLeft": 0,
+            "block": ""
+          },
+          "queueUsers": [],
+          "runtime": {
+            "isRunning": false,
+            "isPaused": false
+          },
+          "notifications": {
+            "fiveMinSent": false,
+            "doneSent": false,
+            "nextUserSent": false
+          },
+          "slot": {
+            "totalTime": 2400,
+            "prepTime": 300,
+            "washTime": 1800,
+            "endingTime": 300,
+            "reservedAt": 0,
+            "startedAt": 0,
+            "endingAt": 0
+          },
+          "report": {
+            "isReported": false,
+            "reportedBy": "",
+            "issue": "",
+            "block": "",
+            "timestamp": 0
+          }
+        },
+        "washer02": {
+          "status": "AVAILABLE",
+          "phase": "IDLE",
+          "temperature": "",
+          "currentUser": {
+            "phone": "",
+            "timeLeft": 0,
+            "block": ""
+          },
+          "queueUsers": [],
+          "runtime": {
+            "isRunning": false,
+            "isPaused": false
+          },
+          "notifications": {
+            "fiveMinSent": false,
+            "doneSent": false,
+            "nextUserSent": false
+          },
+          "slot": {
+            "totalTime": 2400,
+            "prepTime": 300,
+            "washTime": 1800,
+            "endingTime": 300,
+            "reservedAt": 0,
+            "startedAt": 0,
+            "endingAt": 0
+          },
+          "report": {
+            "isReported": false,
+            "reportedBy": "",
+            "issue": "",
+            "block": "",
+            "timestamp": 0
+          }
+        }
+      }
+    },
+    "mahsuri": {
+      "machines": {
+        "washer01": {
+          "status": "AVAILABLE",
+          "phase": "IDLE",
+          "temperature": "",
+          "currentUser": {
+            "phone": "",
+            "timeLeft": 0,
+            "block": ""
+          },
+          "queueUsers": [],
+          "runtime": {
+            "isRunning": false,
+            "isPaused": false
+          },
+          "notifications": {
+            "fiveMinSent": false,
+            "doneSent": false,
+            "nextUserSent": false
+          },
+          "slot": {
+            "totalTime": 2400,
+            "prepTime": 300,
+            "washTime": 1800,
+            "endingTime": 300,
+            "reservedAt": 0,
+            "startedAt": 0,
+            "endingAt": 0
+          },
+          "report": {
+            "isReported": false,
+            "reportedBy": "",
+            "issue": "",
+            "block": "",
+            "timestamp": 0
+          }
+        },
+        "washer02": {
+          "status": "AVAILABLE",
+          "phase": "IDLE",
+          "temperature": "",
+          "currentUser": {
+            "phone": "",
+            "timeLeft": 0,
+            "block": ""
+          },
+          "queueUsers": [],
+          "runtime": {
+            "isRunning": false,
+            "isPaused": false
+          },
+          "notifications": {
+            "fiveMinSent": false,
+            "doneSent": false,
+            "nextUserSent": false
+          },
+          "slot": {
+            "totalTime": 2400,
+            "prepTime": 300,
+            "washTime": 1800,
+            "endingTime": 300,
+            "reservedAt": 0,
+            "startedAt": 0,
+            "endingAt": 0
+          },
+          "report": {
+            "isReported": false,
+            "reportedBy": "",
+            "issue": "",
+            "block": "",
+            "timestamp": 0
+          }
+        }
       }
     }
   }
