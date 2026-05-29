@@ -99,27 +99,27 @@ void drawDisplay(String status, int timeLeft, String phone) {
 }
 
 void promoteNextUser() {
-  FirebaseJsonData data;
-
   String nextPhone = "";
   String nextBlock = "";
 
-  if (Firebase.RTDB.getJSON(&fbdo, path + "/queueUsers")) {
+  if (Firebase.RTDB.getJSON(&fbdo, path + "/queueUsers/0")) {
     FirebaseJson queueJson = fbdo.jsonObject();
+    FirebaseJsonData qPhone;
+    FirebaseJsonData qBlock;
 
-    queueJson.get(data, "/0/phone");
-    nextPhone = data.stringValue;
+    queueJson.get(qPhone, "phone");
+    queueJson.get(qBlock, "block");
 
-    queueJson.get(data, "/0/block");
-    nextBlock = data.stringValue;
+    nextPhone = qPhone.stringValue;
+    nextBlock = qBlock.stringValue;
   }
+
+  Firebase.RTDB.setBool(&fbdo, path + "/runtime/isRunning", false);
+  Firebase.RTDB.setBool(&fbdo, path + "/runtime/isPaused", false);
 
   Firebase.RTDB.setBool(&fbdo, path + "/notifications/fiveMinSent", false);
   Firebase.RTDB.setBool(&fbdo, path + "/notifications/doneSent", false);
   Firebase.RTDB.setBool(&fbdo, path + "/notifications/nextUserSent", false);
-
-  Firebase.RTDB.setBool(&fbdo, path + "/runtime/isRunning", false);
-  Firebase.RTDB.setBool(&fbdo, path + "/runtime/isPaused", false);
 
   if (nextPhone != "") {
     Firebase.RTDB.setString(&fbdo, path + "/currentUser/phone", nextPhone);
@@ -129,13 +129,8 @@ void promoteNextUser() {
     Firebase.RTDB.setString(&fbdo, path + "/status", "BOOKED");
     Firebase.RTDB.setString(&fbdo, path + "/phase", "PREP");
 
-    Firebase.RTDB.setInt(&fbdo, path + "/slot/reservedAt", millis());
-    Firebase.RTDB.setInt(&fbdo, path + "/slot/startedAt", 0);
-    Firebase.RTDB.setInt(&fbdo, path + "/slot/endingAt", 0);
-
     Firebase.RTDB.deleteNode(&fbdo, path + "/queueUsers/0");
-  } 
-  else {
+  } else {
     Firebase.RTDB.setString(&fbdo, path + "/currentUser/phone", "");
     Firebase.RTDB.setString(&fbdo, path + "/currentUser/block", "");
     Firebase.RTDB.setInt(&fbdo, path + "/currentUser/timeLeft", 0);
