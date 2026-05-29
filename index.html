@@ -753,7 +753,9 @@
     function getMachineLabel(machineKey) {
       return machineKey === "washer01" ? "Washer 1" : "Washer 2";
     }
-
+    function getBlockKey(blockName) {
+      return blockName.toLowerCase().replace(/\s+/g, "");
+    }
     function getValidQueue(queueUsers) {
       if (!Array.isArray(queueUsers)) return [];
       return queueUsers.filter((q) => q && q.phone && q.phone.trim() !== "");
@@ -830,7 +832,8 @@
     }
 
     function listenToMachine(machineKey) {
-      const machineRef = ref(db, `machines/${machineKey}`);
+     const blockKey = getBlockKey(selectedBlock);
+      const machineRef = ref(db, `blocks/${blockKey}/machines/${machineKey}`);
 
       if (unsubscribe) unsubscribe();
 
@@ -921,7 +924,8 @@
       const temperature = document.getElementById("temperature").value;
       const message = document.getElementById("message");
 
-      const machineRef = ref(db, `machines/${selectedMachine}`);
+      const blockKey = getBlockKey(selectedBlock);
+      const machineRef = ref(db, `blocks/${blockKey}/machines/${selectedMachine}`);
 
       message.innerText = "";
 
@@ -1038,7 +1042,9 @@
       }
 
       try {
-        await update(ref(db, `machines/${selectedMachine}/report`), {
+        const blockKey = getBlockKey(selectedBlock);
+
+        await update(ref(db, `blocks/${blockKey}/machines/${selectedMachine}/report`), {
           isReported: true,
           reportedBy: reportPhone,
           issue: issueText,
