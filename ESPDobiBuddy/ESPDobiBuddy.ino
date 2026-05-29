@@ -99,17 +99,20 @@ void drawDisplay(String status, int timeLeft, String phone) {
 }
 
 void promoteNextUser() {
+  FirebaseJsonData data;
+
   String nextPhone = "";
+  String nextBlock = "";
 
-  if (Firebase.RTDB.getJSON(&fbdo, path + "/queueUsers/0")) {
+  if (Firebase.RTDB.getJSON(&fbdo, path + "/queueUsers")) {
     FirebaseJson queueJson = fbdo.jsonObject();
-    FirebaseJsonData qPhone;
-    queueJson.get(qPhone, "phone");
-    nextPhone = qPhone.stringValue;
-  }
 
-  Firebase.RTDB.setString(&fbdo, path + "/currentUser/phone", "");
-  Firebase.RTDB.setInt(&fbdo, path + "/currentUser/timeLeft", 0);
+    queueJson.get(data, "/0/phone");
+    nextPhone = data.stringValue;
+
+    queueJson.get(data, "/0/block");
+    nextBlock = data.stringValue;
+  }
 
   Firebase.RTDB.setBool(&fbdo, path + "/notifications/fiveMinSent", false);
   Firebase.RTDB.setBool(&fbdo, path + "/notifications/doneSent", false);
@@ -120,10 +123,24 @@ void promoteNextUser() {
 
   if (nextPhone != "") {
     Firebase.RTDB.setString(&fbdo, path + "/currentUser/phone", nextPhone);
+    Firebase.RTDB.setString(&fbdo, path + "/currentUser/block", nextBlock);
     Firebase.RTDB.setInt(&fbdo, path + "/currentUser/timeLeft", 300);
+
     Firebase.RTDB.setString(&fbdo, path + "/status", "BOOKED");
     Firebase.RTDB.setString(&fbdo, path + "/phase", "PREP");
-  } else {
+
+    Firebase.RTDB.setInt(&fbdo, path + "/slot/reservedAt", millis());
+    Firebase.RTDB.setInt(&fbdo, path + "/slot/startedAt", 0);
+    Firebase.RTDB.setInt(&fbdo, path + "/slot/endingAt", 0);
+
+    Firebase.RTDB.deleteNode(&fbdo, path + "/queueUsers/0");
+  } 
+  else {
+    Firebase.RTDB.setString(&fbdo, path + "/currentUser/phone", "");
+    Firebase.RTDB.setString(&fbdo, path + "/currentUser/block", "");
+    Firebase.RTDB.setInt(&fbdo, path + "/currentUser/timeLeft", 0);
+
+    Firebase.RTDB.setString(&fbdo, path + "/temperature", "");
     Firebase.RTDB.setString(&fbdo, path + "/status", "AVAILABLE");
     Firebase.RTDB.setString(&fbdo, path + "/phase", "IDLE");
   }
