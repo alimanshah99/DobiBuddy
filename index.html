@@ -835,6 +835,22 @@
         const timeLeft = data.currentUser?.timeLeft ?? 0;
 
         if (
+        status === "ENDING" &&
+        timeLeft <= 300 &&
+        timeLeft > 295 &&
+        !data.notifications?.doneSent
+        ) {
+        notifyUser(
+        "DobiBuddy Done",
+        "Your laundry is finished. Please collect your clothes."
+        );
+
+        update(ref(db, `blocks/${getBlockKey(selectedBlock)}/machines/${machineKey}/notifications`), {
+        doneSent: true
+        });
+        }
+
+        if (
           status === "RUNNING" &&
           timeLeft <= 300 &&
           timeLeft > 295 &&
