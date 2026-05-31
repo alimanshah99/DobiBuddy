@@ -16,12 +16,16 @@ String path = "/blocks/mahsuri/machines/washer01";
 // TFT
 #define TFT_CS   5
 #define TFT_DC   4
-#define TFT_RST  2
-#define TFT_BLK  21
+#define TFT_RST  22
+//#define TFT_BLK  21
 
 // LED + BUTTON
 #define LED_PIN 12
 #define CONTROL_BTN 13
+
+// BUZZER
+#define BUZZER_PIN 27
+
 
 FirebaseData fbdo;
 FirebaseAuth auth;
@@ -30,66 +34,110 @@ FirebaseConfig config;
 Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
 
 unsigned long lastTick = 0;
-const unsigned long interval = 1000;
+unsigned long lastDisplay = 0;
+const unsigned long tickInterval = 1000;
+
+String lastStatus = "";
+int lastTimeLeft = -1;
+String lastPhone = "";
 
 String maskPhone(String phone) {
   if (phone.length() <= 6) return phone;
   return phone.substring(0, 3) + "****" + phone.substring(phone.length() - 3);
 }
 
-void drawDisplay(String status, int timeLeft, String phone) {
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setTextWrap(false);
+#define BUZZER_PIN 27
 
-  tft.setTextSize(1);
-  tft.setCursor(5, 5);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.println("DobiBuddy");
+int melody[] = {523, 659, 784, 1047};
+int duration[] = {200, 200, 200, 400};
 
-  tft.drawLine(0, 15, 160, 15, ST77XX_WHITE);
-
-  tft.setCursor(5, 25);
-
-  if (status == "RUNNING") tft.setTextColor(ST77XX_GREEN);
-  else if (status == "PAUSED") tft.setTextColor(ST77XX_YELLOW);
-  else if (status == "BOOKED") tft.setTextColor(ST77XX_BLUE);
-  else if (status == "ENDING") tft.setTextColor(ST77XX_MAGENTA);
-  else if (status == "AVAILABLE") tft.setTextColor(ST77XX_CYAN);
-  else tft.setTextColor(ST77XX_WHITE);
-
-  tft.print("Status: ");
-  tft.println(status);
-
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(5, 45);
-  tft.print("Time: ");
-  tft.print(timeLeft);
-  tft.println(" s");
-
-  tft.setCursor(5, 65);
-  tft.print("User:");
-
-  tft.setCursor(5, 80);
-  tft.println(maskPhone(phone));
-
-  tft.setCursor(5, 105);
-
-  if (status == "BOOKED") {
-    tft.setTextColor(ST77XX_BLUE);
-    tft.println("START IN 5 MIN");
-  } else if (status == "RUNNING") {
-    tft.setTextColor(ST77XX_GREEN);
-    tft.println("WASHING");
-  } else if (status == "PAUSED") {
-    tft.setTextColor(ST77XX_YELLOW);
-    tft.println("EMERGENCY");
-  } else if (status == "ENDING") {
-    tft.setTextColor(ST77XX_MAGENTA);
-    tft.println("COLLECT CLOTH");
-  } else if (status == "AVAILABLE") {
-    tft.setTextColor(ST77XX_CYAN);
-    tft.println("READY");
+void playDoneMelody() {
+  for (int i = 0; i < 4; i++) {
+    tone(BUZZER_PIN, melody[i]);
+    delay(duration[i]);
+    noTone(BUZZER_PIN);
+    delay(50);
   }
+}
+
+void drawDisplay(String status, int displayTimeLeft, String phone) {
+  if (status == lastStatus && displayTimeLeft == lastTimeLeft && phone == lastPhone) {
+    return;
+  }
+
+  lastStatus = status;
+  lastTimeLeft = displayTimeLeft;
+  lastPhone = phone;
+
+  uint16_t themeColor = ST77XX_WHITE;
+  String message = "READY";
+
+  if (status == "RUNNING") {
+    themeColor = ST77XX_GREEN;
+    message = "WASHING...";
+  } 
+  else if (status == "PAUSED") {
+    themeColor = ST77XX_YELLOW;
+    message = "EMERGENCY!";
+  } 
+  else if (status == "BOOKED") {
+    themeColor = ST77XX_BLUE;
+    message = "PRESS START";
+  } 
+  else if (status == "ENDING") {
+    themeColor = ST77XX_MAGENTA;
+    message = "COLLECT NOW";
+  } 
+  else if (status == "AVAILABLE") {
+    themeColor = ST77XX_CYAN;
+    message = "READY";
+  }
+
+  int minutes = displayTimeLeft / 60;
+  int seconds = displayTimeLeft % 60;
+
+  tft.fillScreen(ST77XX_BLACK);
+
+  // Header
+  tft.fillRect(0, 0, 128, 18, themeColor);
+  tft.setTextColor(ST77XX_BLACK);
+  tft.setTextSize(1);
+  tft.setCursor(28, 5);
+  tft.print("DobiBuddy");
+
+  // Status box
+  tft.drawRoundRect(3, 22, 122, 28, 5, themeColor);
+  tft.setTextColor(themeColor);
+  tft.setCursor(10, 32);
+  tft.print("STATUS: ");
+  tft.print(status);
+
+  // Time
+  tft.setTextColor(ST77XX_WHITE);
+  tft.setCursor(8, 58);
+  tft.print("TIME LEFT");
+
+  tft.setTextSize(2);
+  tft.setCursor(25, 72);
+
+  if (minutes < 10) tft.print("0");
+  tft.print(minutes);
+  tft.print(":");
+  if (seconds < 10) tft.print("0");
+  tft.print(seconds);
+
+  // User
+  tft.setTextSize(1);
+  tft.setTextColor(ST77XX_WHITE);
+  tft.setCursor(8, 96);
+  tft.print("USER: ");
+  tft.print(maskPhone(phone));
+
+  // Footer message
+  tft.fillRoundRect(3, 111, 122, 15, 4, themeColor);
+  tft.setTextColor(ST77XX_BLACK);
+  tft.setCursor(20, 115);
+  tft.print(message);
 }
 
 void promoteNextUser() {
@@ -97,20 +145,14 @@ void promoteNextUser() {
   String q1Phone = "", q1Block = "";
   String q2Phone = "", q2Block = "";
 
-  Firebase.RTDB.getString(&fbdo, path + "/queueUsers/0/phone");
-  q0Phone = fbdo.stringData();
-  Firebase.RTDB.getString(&fbdo, path + "/queueUsers/0/block");
-  q0Block = fbdo.stringData();
+  if (Firebase.RTDB.getString(&fbdo, path + "/queueUsers/0/phone")) q0Phone = fbdo.stringData();
+  if (Firebase.RTDB.getString(&fbdo, path + "/queueUsers/0/block")) q0Block = fbdo.stringData();
 
-  Firebase.RTDB.getString(&fbdo, path + "/queueUsers/1/phone");
-  q1Phone = fbdo.stringData();
-  Firebase.RTDB.getString(&fbdo, path + "/queueUsers/1/block");
-  q1Block = fbdo.stringData();
+  if (Firebase.RTDB.getString(&fbdo, path + "/queueUsers/1/phone")) q1Phone = fbdo.stringData();
+  if (Firebase.RTDB.getString(&fbdo, path + "/queueUsers/1/block")) q1Block = fbdo.stringData();
 
-  Firebase.RTDB.getString(&fbdo, path + "/queueUsers/2/phone");
-  q2Phone = fbdo.stringData();
-  Firebase.RTDB.getString(&fbdo, path + "/queueUsers/2/block");
-  q2Block = fbdo.stringData();
+  if (Firebase.RTDB.getString(&fbdo, path + "/queueUsers/2/phone")) q2Phone = fbdo.stringData();
+  if (Firebase.RTDB.getString(&fbdo, path + "/queueUsers/2/block")) q2Block = fbdo.stringData();
 
   Firebase.RTDB.setBool(&fbdo, path + "/runtime/isRunning", false);
   Firebase.RTDB.setBool(&fbdo, path + "/runtime/isPaused", false);
@@ -141,6 +183,7 @@ void promoteNextUser() {
     }
 
     Firebase.RTDB.deleteNode(&fbdo, path + "/queueUsers/2");
+
   } else {
     Firebase.RTDB.setString(&fbdo, path + "/currentUser/phone", "");
     Firebase.RTDB.setString(&fbdo, path + "/currentUser/block", "");
@@ -150,26 +193,18 @@ void promoteNextUser() {
     Firebase.RTDB.setString(&fbdo, path + "/status", "AVAILABLE");
     Firebase.RTDB.setString(&fbdo, path + "/phase", "IDLE");
 
-    Firebase.RTDB.setBool(&fbdo, path + "/runtime/isRunning", false);
-    Firebase.RTDB.setBool(&fbdo, path + "/runtime/isPaused", false);
-
-    Firebase.RTDB.setInt(&fbdo, path + "/slot/reservedAt", 0);
-    Firebase.RTDB.setInt(&fbdo, path + "/slot/startedAt", 0);
-    Firebase.RTDB.setInt(&fbdo, path + "/slot/endingAt", 0);
-
-    Firebase.RTDB.setBool(&fbdo, path + "/notifications/fiveMinSent", false);
-    Firebase.RTDB.setBool(&fbdo, path + "/notifications/doneSent", false);
-    Firebase.RTDB.setBool(&fbdo, path + "/notifications/nextUserSent", false);
-
     Firebase.RTDB.deleteNode(&fbdo, path + "/queueUsers");
   }
 }
 
 void handleControlButton() {
   static bool lastReading = HIGH;
+  static unsigned long lastPress = 0;
+
   bool reading = digitalRead(CONTROL_BTN);
 
-  if (lastReading == HIGH && reading == LOW) {
+  if (lastReading == HIGH && reading == LOW && millis() - lastPress > 500) {
+    lastPress = millis();
     Serial.println("BUTTON PRESSED");
 
     if (Firebase.RTDB.getString(&fbdo, path + "/status")) {
@@ -193,8 +228,6 @@ void handleControlButton() {
         Firebase.RTDB.setBool(&fbdo, path + "/runtime/isPaused", false);
       }
     }
-
-    delay(400);
   }
 
   lastReading = reading;
@@ -205,19 +238,19 @@ void setup() {
 
   pinMode(CONTROL_BTN, INPUT_PULLUP);
   pinMode(LED_PIN, OUTPUT);
-  pinMode(TFT_BLK, OUTPUT);
+  //pinMode(TFT_BLK, OUTPUT);
 
   digitalWrite(LED_PIN, LOW);
-  digitalWrite(TFT_BLK, HIGH);
+  //digitalWrite(TFT_BLK, HIGH);
 
   SPI.begin(18, -1, 23, TFT_CS);
 
-  tft.initR(INITR_GREENTAB);
-  tft.setRotation(1);
+  tft.initR(INITR_144GREENTAB);
+  tft.setRotation(3);
   tft.fillScreen(ST77XX_BLACK);
   tft.setTextColor(ST77XX_GREEN);
   tft.setTextSize(2);
-  tft.setCursor(10, 30);
+  tft.setCursor(20, 45);
   tft.println("BOOTING");
 
   initProperties();
@@ -233,7 +266,6 @@ void setup() {
 
   Serial.println();
   Serial.println("WiFi connected by Arduino Cloud");
-  Serial.print("IP: ");
   Serial.println(WiFi.localIP());
 
   config.api_key = API_KEY;
@@ -250,18 +282,19 @@ void setup() {
   Firebase.reconnectWiFi(true);
 
   tft.fillScreen(ST77XX_BLACK);
-  tft.setTextSize(1);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(5, 20);
-  tft.println("SYSTEM READY");
+  tft.setTextSize(2);
+  tft.setTextColor(ST77XX_CYAN);
+  tft.setCursor(20, 35);
+  tft.println("DOBI");
+  tft.setCursor(15, 65);
+  tft.println("BUDDY");
 }
 
 void loop() {
   ArduinoCloud.update();
-
   handleControlButton();
 
-  if (Firebase.ready() && millis() - lastTick > interval) {
+  if (Firebase.ready() && millis() - lastTick >= tickInterval) {
     lastTick = millis();
 
     if (Firebase.RTDB.getJSON(&fbdo, path)) {
@@ -280,31 +313,36 @@ void loop() {
       json.get(doneData, "notifications/doneSent");
 
       String status = statusData.stringValue;
-      int timeLeft = timeData.intValue;
+      int machineTimeLeft = timeData.intValue;
       String phone = phoneData.stringValue;
       bool fiveMinSent = fiveMinData.boolValue;
       bool doneSent = doneData.boolValue;
 
-      drawDisplay(status, timeLeft, phone);
+      currentUser = maskPhone(phone);
+      machineStatus = status;
+      timeLeft = machineTimeLeft;
+      machineRunning = (status == "RUNNING");
+
+      drawDisplay(status, machineTimeLeft, phone);
 
       if (status == "RUNNING") {
         digitalWrite(LED_PIN, HIGH);
       } else {
-        digitalWrite(LED_PIN, millis() / 500 % 2);
+        digitalWrite(LED_PIN, (millis() / 100) % 2);
       }
 
       if (status == "BOOKED") {
-        if (timeLeft > 0) {
-          timeLeft--;
-          Firebase.RTDB.setInt(&fbdo, path + "/currentUser/timeLeft", timeLeft);
+        if (machineTimeLeft > 0) {
+          machineTimeLeft--;
+          Firebase.RTDB.setInt(&fbdo, path + "/currentUser/timeLeft", machineTimeLeft);
         }
 
-        if (timeLeft <= 0) {
+        if (machineTimeLeft <= 0) {
           promoteNextUser();
         }
       }
 
-      if (status == "RUNNING") {
+      else if (status == "RUNNING") {
         bool isPaused = false;
 
         if (Firebase.RTDB.getBool(&fbdo, path + "/runtime/isPaused")) {
@@ -312,16 +350,16 @@ void loop() {
         }
 
         if (!isPaused) {
-          if (timeLeft > 0) {
-            timeLeft--;
-            Firebase.RTDB.setInt(&fbdo, path + "/currentUser/timeLeft", timeLeft);
+          if (machineTimeLeft > 0) {
+            machineTimeLeft--;
+            Firebase.RTDB.setInt(&fbdo, path + "/currentUser/timeLeft", machineTimeLeft);
           }
 
-          if (timeLeft == 300 && !fiveMinSent) {
+          if (machineTimeLeft == 300 && !fiveMinSent) {
             Firebase.RTDB.setBool(&fbdo, path + "/notifications/fiveMinSent", true);
           }
 
-          if (timeLeft <= 0 && !doneSent) {
+          if (machineTimeLeft <= 0 && !doneSent) {
             Firebase.RTDB.setString(&fbdo, path + "/status", "ENDING");
             Firebase.RTDB.setString(&fbdo, path + "/phase", "ENDING");
             Firebase.RTDB.setInt(&fbdo, path + "/currentUser/timeLeft", 300);
@@ -330,16 +368,37 @@ void loop() {
         }
       }
 
-      if (status == "ENDING") {
-        if (timeLeft > 0) {
-          timeLeft--;
-          Firebase.RTDB.setInt(&fbdo, path + "/currentUser/timeLeft", timeLeft);
+      else if (status == "PAUSED") {
+        digitalWrite(LED_PIN, (millis() / 100) % 2);
+      }
+
+      else if (status == "ENDING") {
+        if (machineTimeLeft > 0) {
+          machineTimeLeft--;
+          Firebase.RTDB.setInt(&fbdo, path + "/currentUser/timeLeft", machineTimeLeft);
         }
 
-        if (timeLeft <= 0) {
+        if (machineTimeLeft <= 0) {
           promoteNextUser();
         }
       }
+
+      else if (status == "AVAILABLE") {
+      Firebase.RTDB.setString(&fbdo, path + "/currentUser/phone", "");
+      Firebase.RTDB.setString(&fbdo, path + "/currentUser/block", "");
+      Firebase.RTDB.setInt(&fbdo, path + "/currentUser/timeLeft", 0);
+
+      Firebase.RTDB.deleteNode(&fbdo, path + "/queueUsers");
+
+      Firebase.RTDB.setString(&fbdo, path + "/phase", "IDLE");
+      Firebase.RTDB.setBool(&fbdo, path + "/runtime/isRunning", false);
+      Firebase.RTDB.setBool(&fbdo, path + "/runtime/isPaused", false);
+
+      Firebase.RTDB.setBool(&fbdo, path + "/notifications/fiveMinSent", false);
+      Firebase.RTDB.setBool(&fbdo, path + "/notifications/doneSent", false);
+      Firebase.RTDB.setBool(&fbdo, path + "/notifications/nextUserSent", false);
+}
+
     } else {
       Serial.println("Firebase read failed");
       Serial.println(fbdo.errorReason());
