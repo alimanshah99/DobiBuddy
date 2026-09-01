@@ -23,6 +23,7 @@
       --tab-active-text: #082f49;
       --message: #0f172a;
       --overlay: rgba(255,255,255,0.2);
+      --font-scale: 1;
     }
 
     body.dark {
@@ -41,9 +42,10 @@
     body {
       margin: 0;
       font-family: Arial, sans-serif;
+      font-size: calc(14px * var(--font-scale));
       color: var(--text);
       min-height: 100vh;
-      padding: 20px 14px 40px;
+      padding: 20px 14px 80px;
       background:
         linear-gradient(var(--overlay), var(--overlay)),
         url("laundry.jpg") no-repeat center center fixed;
@@ -77,7 +79,7 @@
     }
 
     .welcome-title {
-      font-size: 34px;
+      font-size: calc(34px * var(--font-scale));
       margin: 0;
       font-weight: bold;
     }
@@ -85,7 +87,7 @@
     .welcome-subtitle {
       margin: 8px 0 24px;
       color: var(--muted);
-      font-size: 15px;
+      font-size: calc(15px * var(--font-scale));
     }
 
     .block-btn {
@@ -94,39 +96,34 @@
       border-radius: 18px;
       padding: 16px;
       margin-top: 12px;
-      font-size: 18px;
+      font-size: calc(18px * var(--font-scale));
       font-weight: bold;
       cursor: pointer;
       background: #38bdf8;
       color: #082f49;
     }
 
-    .block-btn:nth-of-type(2) {
-      background: #f472b6;
-      color: #831843;
-    }
-
-    .block-btn:nth-of-type(3) {
-      background: #a78bfa;
-      color: #3b0764;
-    }
+    .block-btn:nth-of-type(2) { background: #f472b6; color: #831843; }
+    .block-btn:nth-of-type(3) { background: #a78bfa; color: #3b0764; }
 
     .topbar {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      gap: 12px;
+      gap: 10px;
       margin-bottom: 18px;
     }
 
     .topbar-right {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
 
     .app-title {
-      font-size: 26px;
+      font-size: calc(26px * var(--font-scale));
       font-weight: bold;
       margin: 0;
     }
@@ -134,23 +131,18 @@
     .app-subtitle {
       margin: 4px 0 0;
       color: var(--muted);
-      font-size: 14px;
+      font-size: calc(14px * var(--font-scale));
     }
 
-    .status-pill, .theme-btn {
-      padding: 8px 12px;
+    .status-pill, .theme-btn, .lang-btn, .font-btn {
+      padding: 6px 10px;
       border-radius: 999px;
-      font-size: 13px;
+      font-size: calc(12px * var(--font-scale));
       font-weight: bold;
       background: var(--pill-bg);
       color: var(--pill-text);
       border: none;
-    }
-
-    .theme-btn, #enableNotifBtn {
       cursor: pointer;
-      border-radius: 12px;
-      font-size: 16px;
     }
 
     .panel {
@@ -165,7 +157,7 @@
 
     .section-title {
       margin: 0 0 14px;
-      font-size: 16px;
+      font-size: calc(16px * var(--font-scale));
       font-weight: bold;
     }
 
@@ -180,7 +172,7 @@
       border: none;
       border-radius: 14px;
       padding: 14px 12px;
-      font-size: 15px;
+      font-size: calc(15px * var(--font-scale));
       font-weight: bold;
       cursor: pointer;
       background: var(--tab-bg);
@@ -196,13 +188,13 @@
     .machine-card { text-align: center; }
 
     .machine-name {
-      font-size: 18px;
+      font-size: calc(18px * var(--font-scale));
       font-weight: bold;
       margin-bottom: 4px;
     }
 
     .machine-status {
-      font-size: 24px;
+      font-size: calc(24px * var(--font-scale));
       font-weight: bold;
       margin-bottom: 10px;
     }
@@ -212,7 +204,7 @@
       margin-bottom: 12px;
       padding: 6px 12px;
       border-radius: 999px;
-      font-size: 12px;
+      font-size: calc(12px * var(--font-scale));
       font-weight: bold;
       background: rgba(239,68,68,0.18);
       color: #ef4444;
@@ -324,21 +316,9 @@
     .cloth2 { width: 34px; height: 34px; background: #facc15; bottom: 12px; left: 12px; }
     .cloth3 { width: 32px; height: 32px; background: #4ade80; bottom: 18px; right: 12px; }
 
-    @keyframes spinDrum {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-
-    @keyframes pausedShake {
-      0%,100% { transform: rotate(0deg); }
-      25% { transform: rotate(2deg); }
-      75% { transform: rotate(-2deg); }
-    }
-
-    @keyframes rise {
-      from { transform: translateY(0); opacity: 1; }
-      to { transform: translateY(-115px); opacity: 0; }
-    }
+    @keyframes spinDrum { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes pausedShake { 0%,100% { transform: rotate(0deg); } 25% { transform: rotate(2deg); } 75% { transform: rotate(-2deg); } }
+    @keyframes rise { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-115px); opacity: 0; } }
 
     .drum.running { animation: spinDrum 1.2s linear infinite; }
     .drum.paused { animation: pausedShake 0.8s ease-in-out infinite; }
@@ -358,13 +338,13 @@
     }
 
     .info-label {
-      font-size: 12px;
+      font-size: calc(12px * var(--font-scale));
       color: var(--muted);
       margin-bottom: 6px;
     }
 
     .info-value {
-      font-size: 15px;
+      font-size: calc(15px * var(--font-scale));
       font-weight: bold;
       word-break: break-word;
     }
@@ -385,14 +365,14 @@
     }
 
     .emergency-title {
-      font-size: 13px;
+      font-size: calc(13px * var(--font-scale));
       color: #fecaca;
       margin-bottom: 6px;
       font-weight: bold;
     }
 
     .emergency-number {
-      font-size: 18px;
+      font-size: calc(18px * var(--font-scale));
       font-weight: bold;
       color: #ffffff;
     }
@@ -401,7 +381,7 @@
 
     .form-label {
       display: block;
-      font-size: 14px;
+      font-size: calc(14px * var(--font-scale));
       margin-bottom: 8px;
       color: var(--text);
     }
@@ -412,19 +392,19 @@
       border-radius: 14px;
       border: none;
       outline: none;
-      font-size: 15px;
+      font-size: calc(15px * var(--font-scale));
       background: var(--input-bg);
       color: var(--input-text);
       resize: vertical;
     }
 
-    .book-btn, .report-btn, .wa-btn {
+    .book-btn, .report-btn {
       width: 100%;
       padding: 14px;
       border: none;
       border-radius: 16px;
       color: white;
-      font-size: 16px;
+      font-size: calc(16px * var(--font-scale));
       font-weight: bold;
       cursor: pointer;
       margin-top: 8px;
@@ -432,7 +412,6 @@
 
     .book-btn { background: #22c55e; }
     .report-btn { background: #ef4444; }
-    .wa-btn { background: #25D366; }
 
     .msg {
       margin-top: 12px;
@@ -443,7 +422,7 @@
     }
 
     .note {
-      font-size: 12px;
+      font-size: calc(12px * var(--font-scale));
       color: var(--muted);
       margin-top: 6px;
     }
@@ -451,7 +430,7 @@
     .small-link {
       text-align: center;
       margin-top: 14px;
-      font-size: 14px;
+      font-size: calc(14px * var(--font-scale));
       color: var(--muted);
     }
 
@@ -461,15 +440,15 @@
       color: #38bdf8;
       font-weight: bold;
       cursor: pointer;
-      font-size: 14px;
+      font-size: calc(14px * var(--font-scale));
       padding: 0;
     }
 
-    .hidden { display: none; }
+    .hidden { display: none !important; }
 
     .change-block {
       margin-top: 6px;
-      font-size: 12px;
+      font-size: calc(12px * var(--font-scale));
       color: var(--muted);
       background: none;
       border: none;
@@ -477,15 +456,115 @@
       padding: 0;
       text-decoration: underline;
     }
+
+    /* Floating AI Chat Box */
+    .ai-fab {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #0284c7;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 12px 18px;
+      font-size: 15px;
+      font-weight: bold;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      cursor: pointer;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ai-box {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      width: 320px;
+      height: 420px;
+      background: var(--panel);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--panel-border);
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+      display: flex;
+      flex-direction: column;
+      z-index: 1000;
+      overflow: hidden;
+    }
+
+    .ai-header {
+      background: rgba(15,23,42,0.15);
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+    }
+
+    .ai-logs {
+      flex: 1;
+      padding: 12px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    .ai-msg {
+      padding: 8px 12px;
+      border-radius: 12px;
+      max-width: 85%;
+      word-break: break-word;
+    }
+
+    .ai-msg.bot {
+      background: rgba(56, 189, 248, 0.2);
+      align-self: flex-start;
+      color: var(--text);
+    }
+
+    .ai-msg.user {
+      background: #0284c7;
+      color: white;
+      align-self: flex-end;
+    }
+
+    .ai-input-wrap {
+      display: flex;
+      padding: 8px;
+      gap: 6px;
+      border-top: 1px solid var(--panel-border);
+    }
+
+    .ai-input-wrap input {
+      padding: 8px 12px;
+      font-size: 13px;
+      border-radius: 10px;
+    }
+
+    .ai-input-wrap button {
+      background: #0284c7;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 0 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
   </style>
 </head>
 
 <body>
   <audio id="notifSound" src="notification.mp3" preload="auto"></audio>
+
+  <!-- Welcome Page -->
   <div class="welcome-page" id="welcomePage">
     <div class="welcome-card">
       <h1 class="welcome-title">DobiBuddy</h1>
-      <p class="welcome-subtitle">Choose your Blok Kediaman</p>
+      <p class="welcome-subtitle" data-i18n="chooseBlock">Choose your Blok Kediaman</p>
 
       <button class="block-btn" data-block="Tuah">Tuah</button>
       <button class="block-btn" data-block="Srikandi">Srikandi</button>
@@ -493,35 +572,38 @@
     </div>
   </div>
 
+  <!-- Main App -->
   <div class="app" id="mainApp">
     <div class="topbar">
       <div>
         <h1 class="app-title">DobiBuddy</h1>
         <p class="app-subtitle">
-          <span id="selectedBlockText">Blok Kediaman</span> Laundry
+          <span id="selectedBlockText">Blok Kediaman</span> <span data-i18n="laundryTitle">Laundry</span>
         </p>
-        <button class="change-block" id="changeBlockBtn">Change block</button>
+        <button class="change-block" id="changeBlockBtn" data-i18n="changeBlock">Change block</button>
       </div>
 
       <div class="topbar-right">
-        <div id="topStatus" class="status-pill">Loading...</div>
+        <button id="langToggle" class="lang-btn">BM</button>
+        <button id="fontUpBtn" class="font-btn">A+</button>
+        <button id="fontDownBtn" class="font-btn">A-</button>
         <button id="enableNotifBtn" class="status-pill">🔔</button>
         <button id="themeToggle" class="theme-btn">🌙</button>
       </div>
     </div>
 
     <div class="panel">
-      <div class="section-title">Select Washer</div>
+      <div class="section-title" data-i18n="selectWasher">Select Washer</div>
 
       <div class="washer-tabs">
-        <button class="washer-btn active" data-machine="washer01">Washer 1</button>
-        <button class="washer-btn" data-machine="washer02">Washer 2</button>
+        <button class="washer-btn active" data-machine="washer01" id="tabWasher1">Washer 1</button>
+        <button class="washer-btn" data-machine="washer02" id="tabWasher2">Washer 2</button>
       </div>
 
       <div class="machine-card">
         <div class="machine-name" id="machineName">Washer 1</div>
         <div class="machine-status" id="status">Loading...</div>
-        <div id="reportBadge" class="report-badge" style="display:none;">Machine Reported</div>
+        <div id="reportBadge" class="report-badge" style="display:none;" data-i18n="machineReported">Machine Reported</div>
 
         <div class="machine-wrap">
           <div class="machine-box">
@@ -550,81 +632,98 @@
 
         <div class="info-grid">
           <div class="info-box">
-            <div class="info-label">Current User</div>
+            <div class="info-label" data-i18n="currentUser">Current User</div>
             <div class="info-value" id="currentPhone">-</div>
           </div>
 
           <div class="info-box">
-            <div class="info-label">Time Left</div>
+            <div class="info-label" data-i18n="timeLeft">Time Left</div>
             <div class="info-value" id="timeLeft">0:00</div>
           </div>
 
           <div class="info-box">
-            <div class="info-label">Temperature</div>
+            <div class="info-label" data-i18n="temperature">Temperature</div>
             <div class="info-value" id="tempDisplay">-</div>
           </div>
 
           <div class="info-box">
-            <div class="info-label">Phase</div>
+            <div class="info-label" data-i18n="phase">Phase</div>
             <div class="info-value" id="phaseDisplay">IDLE</div>
           </div>
         </div>
 
         <div class="panel" style="margin-top:16px; margin-bottom:0;">
-          <div class="section-title">In Queue</div>
+          <div class="section-title" data-i18n="inQueue">In Queue</div>
           <div id="queueList" class="info-value">No queue</div>
         </div>
 
         <div class="emergency-box">
-          <div class="emergency-title">Emergency Contact</div>
+          <div class="emergency-title" data-i18n="emergencyContact">Emergency Contact</div>
           <div class="emergency-number">012-3456789</div>
         </div>
       </div>
     </div>
 
     <div class="panel">
-      <div class="section-title">Book Machine</div>
+      <div class="section-title" data-i18n="bookMachine">Book Machine</div>
 
       <div class="form-group">
-        <label class="form-label" for="phone">Phone Number</label>
+        <label class="form-label" for="phone" data-i18n="phoneLabel">Phone Number</label>
         <input type="tel" id="phone" maxlength="11" placeholder="Example: 01234567890" />
-        <div class="note">Phone must start with 01. Maximum 11 digits.</div>
+        <div class="note" data-i18n="phoneNote">Phone must start with 01. Maximum 11 digits.</div>
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="temperature">Temperature</label>
+        <label class="form-label" for="temperature" data-i18n="tempLabel">Temperature</label>
         <select id="temperature">
-          <option value="">Select temperature</option>
-          <option value="Cold">Cold</option>
-          <option value="Warm">Warm</option>
-          <option value="Hot">Hot</option>
+          <option value="" data-i18n="optSelectTemp">Select temperature</option>
+          <option value="Cold" data-i18n="optCold">Cold</option>
+          <option value="Warm" data-i18n="optWarm">Warm</option>
+          <option value="Hot" data-i18n="optHot">Hot</option>
         </select>
       </div>
 
-      <button class="book-btn" id="bookBtn">Book Selected Washer</button>
+      <button class="book-btn" id="bookBtn" data-i18n="bookBtn">Book Selected Washer</button>
       <div id="message" class="msg"></div>
 
       <div class="small-link">
-        Machine problem?
-        <button id="showReportBtn">Report machine</button>
+        <span data-i18n="machineProblem">Machine problem?</span>
+        <button id="showReportBtn" data-i18n="reportLink">Report machine</button>
       </div>
     </div>
 
     <div class="panel hidden" id="reportPanel">
-      <div class="section-title">Report Machine Problem</div>
+      <div class="section-title" data-i18n="reportTitle">Report Machine Problem</div>
 
       <div class="form-group">
-        <label class="form-label" for="reportPhone">Your Phone Number</label>
+        <label class="form-label" for="reportPhone" data-i18n="reportPhoneLabel">Your Phone Number</label>
         <input type="tel" id="reportPhone" maxlength="11" placeholder="Example: 01234567890" />
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="issueText">Problem Description</label>
+        <label class="form-label" for="issueText" data-i18n="issueLabel">Problem Description</label>
         <textarea id="issueText" rows="4" placeholder="Example: Machine not spinning / water not coming out"></textarea>
       </div>
 
-      <button class="report-btn" id="reportBtn">Submit Report</button>
+      <button class="report-btn" id="reportBtn" data-i18n="submitReportBtn">Submit Report</button>
       <div id="reportMessage" class="msg"></div>
+    </div>
+  </div>
+
+  <!-- AI Chat Box Floating UI -->
+  <button class="ai-fab" id="aiToggleBtn">💬 AI Assistant</button>
+
+  <div class="ai-box hidden" id="aiChatBox">
+    <div class="ai-header">
+      <span>DobiBuddy AI 🤖</span>
+      <button id="aiCloseBtn" style="background:none;border:none;color:var(--text);font-size:16px;cursor:pointer;">✕</button>
+    </div>
+    <div class="ai-logs" id="aiLogs">
+      <div class="ai-msg bot">Hi! I'm DobiBuddy AI. Ask me about washer status, queue, or temperature!</div>
+    </div>
+    <div class="ai-input-wrap">
+      <input type="text" id="aiInput" placeholder="Ask a question..." />
+      <button id="aiSendBtn">Send</button>
     </div>
   </div>
 
@@ -657,68 +756,91 @@
     let unsubscribe = null;
     let latestMachineData = null;
 
-    let fiveMinNotified = false;
-    let queueNotified = false;
+    let currentScale = 1;
+    let currentLang = "EN";
+
+    const i18n = {
+      EN: {
+        chooseBlock: "Choose your Blok Kediaman",
+        laundryTitle: "Laundry",
+        changeBlock: "Change block",
+        selectWasher: "Select Washer",
+        currentUser: "Current User",
+        timeLeft: "Time Left",
+        temperature: "Temperature",
+        phase: "Phase",
+        inQueue: "In Queue",
+        noQueue: "No queue",
+        emergencyContact: "Emergency Contact",
+        bookMachine: "Book Machine",
+        phoneLabel: "Phone Number",
+        phoneNote: "Phone must start with 01. Maximum 11 digits.",
+        tempLabel: "Temperature",
+        optSelectTemp: "Select temperature",
+        optCold: "Cold",
+        optWarm: "Warm",
+        optHot: "Hot",
+        bookBtn: "Book Selected Washer",
+        machineProblem: "Machine problem?",
+        reportLink: "Report machine",
+        reportTitle: "Report Machine Problem",
+        reportPhoneLabel: "Your Phone Number",
+        issueLabel: "Problem Description",
+        submitReportBtn: "Submit Report",
+        machineReported: "Machine Reported"
+      },
+      BM: {
+        chooseBlock: "Pilih Blok Kediaman anda",
+        laundryTitle: "Dobi",
+        changeBlock: "Tukar blok",
+        selectWasher: "Pilih Mesin Basuh",
+        currentUser: "Pengguna Semasa",
+        timeLeft: "Masa Tinggal",
+        temperature: "Suhu",
+        phase: "Fasa",
+        inQueue: "Dalam Barisan",
+        noQueue: "Tiada giliran",
+        emergencyContact: "Nombor Kecemasan",
+        bookMachine: "Tempah Mesin",
+        phoneLabel: "Nombor Telefon",
+        phoneNote: "Nombor mesti bermula dengan 01. Maksimum 11 digit.",
+        tempLabel: "Suhu Air",
+        optSelectTemp: "Pilih suhu",
+        optCold: "Sejuk",
+        optWarm: "Suam",
+        optHot: "Panas",
+        bookBtn: "Tempah Mesin Basuh",
+        machineProblem: "Mesin bermasalah?",
+        reportLink: "Lapor kerosakan",
+        reportTitle: "Lapor Kerosakan Mesin",
+        reportPhoneLabel: "Nombor Telefon Anda",
+        issueLabel: "Penerangan Masalah",
+        submitReportBtn: "Hantar Laporan",
+        machineReported: "Kerosakan Dilaporkan"
+      }
+    };
+
+    function applyLanguage(lang) {
+      currentLang = lang;
+      localStorage.setItem("dobi_lang", lang);
+      document.getElementById("langToggle").textContent = lang === "EN" ? "BM" : "EN";
+
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const key = el.getAttribute("data-i18n");
+        if (i18n[lang][key]) el.textContent = i18n[lang][key];
+      });
+    }
+
+    function applyFontScale(scale) {
+      currentScale = Math.min(Math.max(0.85, scale), 1.25);
+      document.documentElement.style.setProperty("--font-scale", currentScale);
+      localStorage.setItem("dobi_font_scale", currentScale);
+    }
 
     const TOTAL_SLOT = 2400;
     const PREP_TIME = 300;
     const WASH_TIME = 1800;
     const ENDING_TIME = 300;
-
-    function notifyUser(title, message) {
-      alert(message);
-
-      const sound = document.getElementById("notifSound");
-      if (sound) sound.play().catch(() => {});
-
-      if ("Notification" in window && Notification.permission === "granted") {
-        new Notification(title, {
-          body: message,
-          icon: "https://cdn-icons-png.flaticon.com/512/1046/1046857.png"
-        });
-      }
-    }
-
-    function setInitialTheme() {
-      const saved = localStorage.getItem("theme");
-
-      if (saved === "dark") document.body.classList.add("dark");
-      else if (saved === "light") document.body.classList.remove("dark");
-      else {
-        document.body.classList.toggle(
-          "dark",
-          window.matchMedia("(prefers-color-scheme: dark)").matches
-        );
-      }
-
-      updateThemeButton();
-    }
-
-    function updateThemeButton() {
-      document.getElementById("themeToggle").textContent =
-        document.body.classList.contains("dark") ? "☀️" : "🌙";
-    }
-
-    function selectBlock(blockName) {
-      selectedBlock = blockName;
-      localStorage.setItem("selectedBlock", blockName);
-
-      document.getElementById("selectedBlockText").innerText = blockName;
-      document.getElementById("welcomePage").style.display = "none";
-      document.getElementById("mainApp").style.display = "block";
-
-      listenToMachine(selectedMachine);
-    }
-
-    function backToBlockSelection() {
-      selectedBlock = "";
-      localStorage.removeItem("selectedBlock");
-
-      document.getElementById("mainApp").style.display = "none";
-      document.getElementById("welcomePage").style.display = "flex";
-
-      if (unsubscribe) unsubscribe();
-    }
 
     function maskPhone(phone) {
       if (!phone) return "-";
@@ -740,9 +862,11 @@
     function getMachineLabel(machineKey) {
       return machineKey === "washer01" ? "Washer 1" : "Washer 2";
     }
+
     function getBlockKey(blockName) {
       return blockName.toLowerCase().replace(/\s+/g, "");
     }
+
     function getValidQueue(queueUsers) {
       if (!Array.isArray(queueUsers)) return [];
       return queueUsers.filter((q) => q && q.phone && q.phone.trim() !== "");
@@ -760,23 +884,15 @@
 
     function setStatusColor(status) {
       const statusEl = document.getElementById("status");
-      const topStatus = document.getElementById("topStatus");
-
       const map = {
-        AVAILABLE: ["#38bdf8", "#082f49", "#7dd3fc"],
-        BOOKED: ["#60a5fa", "#1e3a8a", "#bfdbfe"],
-        RUNNING: ["#22c55e", "#14532d", "#86efac"],
-        PAUSED: ["#f59e0b", "#78350f", "#fcd34d"],
-        ENDING: ["#a78bfa", "#3b0764", "#c4b5fd"],
-        DONE: ["#a78bfa", "#3b0764", "#c4b5fd"],
-        REPORTED: ["#ef4444", "#7f1d1d", "#fecaca"]
+        AVAILABLE: "#38bdf8",
+        BOOKED: "#60a5fa",
+        RUNNING: "#22c55e",
+        PAUSED: "#f59e0b",
+        ENDING: "#a78bfa",
+        REPORTED: "#ef4444"
       };
-
-      const colors = map[status] || ["#ffffff", "var(--pill-bg)", "var(--pill-text)"];
-
-      statusEl.style.color = colors[0];
-      topStatus.style.background = colors[1];
-      topStatus.style.color = colors[2];
+      statusEl.style.color = map[status] || "#ffffff";
     }
 
     function renderQueue(machine) {
@@ -784,15 +900,13 @@
       const validQueue = getValidQueue(machine.queueUsers);
 
       if (validQueue.length === 0) {
-        queueList.innerHTML = "No queue";
+        queueList.innerHTML = i18n[currentLang].noQueue;
         return;
       }
 
       queueList.innerHTML = "";
-
       validQueue.forEach((q, index) => {
         const waitingMin = getQueueWaitingTime(machine, index);
-
         queueList.innerHTML += `
           <div class="queue-card">
             <b>Queue ${index + 1}</b><br>
@@ -803,8 +917,25 @@
       });
     }
 
+    function selectBlock(blockName) {
+      selectedBlock = blockName;
+      localStorage.setItem("selectedBlock", blockName);
+      document.getElementById("selectedBlockText").innerText = blockName;
+      document.getElementById("welcomePage").style.display = "none";
+      document.getElementById("mainApp").style.display = "block";
+      listenToMachine(selectedMachine);
+    }
+
+    function backToBlockSelection() {
+      selectedBlock = "";
+      localStorage.removeItem("selectedBlock");
+      document.getElementById("mainApp").style.display = "none";
+      document.getElementById("welcomePage").style.display = "flex";
+      if (unsubscribe) unsubscribe();
+    }
+
     function listenToMachine(machineKey) {
-     const blockKey = getBlockKey(selectedBlock);
+      const blockKey = getBlockKey(selectedBlock);
       const machineRef = ref(db, `blocks/${blockKey}/machines/${machineKey}`);
 
       if (unsubscribe) unsubscribe();
@@ -820,13 +951,12 @@
         document.getElementById("machineName").innerText = getMachineLabel(machineKey);
 
         if (!data) {
-          document.getElementById("status").innerText = "No data";
-          document.getElementById("topStatus").innerText = "No data";
+          document.getElementById("status").innerText = "AVAILABLE";
           document.getElementById("currentPhone").innerText = "-";
           document.getElementById("timeLeft").innerText = "0:00";
           document.getElementById("tempDisplay").innerText = "-";
           document.getElementById("phaseDisplay").innerText = "IDLE";
-          document.getElementById("queueList").innerHTML = "No queue";
+          document.getElementById("queueList").innerHTML = i18n[currentLang].noQueue;
           return;
         }
 
@@ -834,60 +964,7 @@
         const phase = data.phase || "IDLE";
         const timeLeft = data.currentUser?.timeLeft ?? 0;
 
-        if (
-        status === "ENDING" &&
-        timeLeft <= 300 &&
-        timeLeft > 295 &&
-        !data.notifications?.doneSent
-        ) {
-        notifyUser(
-        "DobiBuddy Done",
-        "Your laundry is finished. Please collect your clothes."
-        );
-
-        update(ref(db, `blocks/${getBlockKey(selectedBlock)}/machines/${machineKey}/notifications`), {
-        doneSent: true
-        });
-        }
-
-        if (
-          status === "RUNNING" &&
-          timeLeft <= 300 &&
-          timeLeft > 295 &&
-          !fiveMinNotified
-        ) {
-          fiveMinNotified = true;
-
-          notifyUser(
-            "DobiBuddy Reminder",
-            "5 minutes left for your laundry."
-          );
-        }
-
-        if (status !== "RUNNING") {
-          fiveMinNotified = false;
-        }
-
-        if (
-          status === "BOOKED" &&
-          timeLeft <= 300 &&
-          timeLeft > 295 &&
-          !queueNotified
-        ) {
-          queueNotified = true;
-
-          notifyUser(
-            "DobiBuddy Queue",
-            "Your washing slot is ready. Please start within 5 minutes."
-          );
-        }
-
-        if (status !== "BOOKED") {
-          queueNotified = false;
-        }
-
         document.getElementById("status").innerText = status;
-        document.getElementById("topStatus").innerText = status;
         document.getElementById("currentPhone").innerText = maskPhone(data.currentUser?.phone);
         document.getElementById("timeLeft").innerText = formatTime(timeLeft);
         document.getElementById("tempDisplay").innerText = data.temperature || "-";
@@ -897,7 +974,6 @@
         setStatusColor(status);
 
         drum.classList.remove("running", "paused");
-
         if (status === "RUNNING") drum.classList.add("running");
         if (status === "PAUSED") drum.classList.add("paused");
 
@@ -906,154 +982,31 @@
       });
     }
 
-    async function bookMachine() {
-      const phone = document.getElementById("phone").value.trim();
-      const temperature = document.getElementById("temperature").value;
-      const message = document.getElementById("message");
+    // AI Assistant Bot Logic (Direct contextual Q&A)
+    function handleAiQuery(query) {
+      const q = query.toLowerCase();
+      const status = latestMachineData?.status || "AVAILABLE";
+      const timeLeft = Math.ceil((latestMachineData?.currentUser?.timeLeft || 0) / 60);
+      const queueCount = getValidQueue(latestMachineData?.queueUsers).length;
 
-      const blockKey = getBlockKey(selectedBlock);
-      const machineRef = ref(db, `blocks/${blockKey}/machines/${selectedMachine}`);
-
-      message.innerText = "";
-
-      if (!selectedBlock) {
-        message.innerText = "Please select your blok kediaman first.";
-        return;
+      if (q.includes("available") || q.includes("free") || q.includes("status") || q.includes("kosong")) {
+        return `${getMachineLabel(selectedMachine)} at ${selectedBlock} is currently **${status}** (${timeLeft} min left).`;
       }
-
-      if (!validatePhone(phone)) {
-        message.innerText = "Invalid phone number. Example: 01234567890. Maximum 11 digits.";
-        return;
+      if (q.includes("queue") || q.includes("wait") || q.includes("giliran") || q.includes("tunggu")) {
+        return `There are currently ${queueCount} users in the queue for ${getMachineLabel(selectedMachine)}.`;
       }
-
-      if (!temperature) {
-        message.innerText = "Please select temperature.";
-        return;
+      if (q.includes("warm") || q.includes("temp") || q.includes("cold") || q.includes("hot") || q.includes("suhu")) {
+        return "Cold: daily clothes. Warm: moderately soiled clothes. Hot: heavy bedding/disinfection.";
       }
-
-      try {
-        const result = await runTransaction(machineRef, (machine) => {
-          if (!machine) return machine;
-
-          const validQueue = getValidQueue(machine.queueUsers);
-          const currentPhone = machine.currentUser?.phone || "";
-
-          if (!currentPhone) {
-            machine.currentUser = {
-              phone,
-              timeLeft: PREP_TIME,
-              block: selectedBlock
-            };
-
-            machine.temperature = temperature;
-            machine.status = "BOOKED";
-            machine.phase = "PREP";
-
-            machine.slot = {
-              totalTime: TOTAL_SLOT,
-              prepTime: PREP_TIME,
-              washTime: WASH_TIME,
-              endingTime: ENDING_TIME,
-              reservedAt: Date.now(),
-              startedAt: 0,
-              endingAt: 0
-            };
-
-            machine.runtime = {
-              isRunning: false,
-              isPaused: false
-            };
-
-            machine.notifications = {
-              fiveMinSent: false,
-              doneSent: false,
-              nextUserSent: false
-            };
-
-            machine.queueUsers = validQueue;
-
-            return machine;
-          }
-
-          if (validQueue.length >= 3) return;
-
-          validQueue.push({
-            phone,
-            block: selectedBlock,
-            bookedAt: Date.now(),
-            waitingTime: getCurrentRemaining(machine) + validQueue.length * TOTAL_SLOT
-          });
-
-          machine.queueUsers = validQueue;
-
-          return machine;
-        });
-
-        if (!result.committed) {
-          message.innerText = "Queue full. Maximum 3 users only.";
-          return;
-        }
-
-        const data = result.snapshot.val();
-
-        if (data.currentUser?.phone === phone) {
-          message.innerText = "Booking successful. Please start machine within 5 minutes.";
-        } else {
-          message.innerText = "Added into queue successfully.";
-        }
-
-        document.getElementById("phone").value = "";
-        document.getElementById("temperature").value = "";
-
-      } catch (error) {
-        console.error(error);
-        message.innerText = "Error: " + error.message;
+      if (q.includes("report") || q.includes("rosak") || q.includes("problem")) {
+        return "Click 'Report machine' link at the bottom of the booking card to submit an issue.";
       }
+      return "I can help with machine status, waiting times, temperature recommendations, and troubleshooting reports!";
     }
 
-    async function reportMachine() {
-      const reportPhone = document.getElementById("reportPhone").value.trim();
-      const issueText = document.getElementById("issueText").value.trim();
-      const reportMessage = document.getElementById("reportMessage");
-
-      reportMessage.innerText = "";
-
-      if (!validatePhone(reportPhone)) {
-        reportMessage.innerText = "Invalid phone number. Example: 01234567890.";
-        return;
-      }
-
-      if (!issueText) {
-        reportMessage.innerText = "Please describe the machine problem.";
-        return;
-      }
-
-      try {
-        const blockKey = getBlockKey(selectedBlock);
-
-        await update(ref(db, `blocks/${blockKey}/machines/${selectedMachine}/report`), {
-          isReported: true,
-          reportedBy: reportPhone,
-          issue: issueText,
-          block: selectedBlock,
-          timestamp: Date.now()
-        });
-
-        reportMessage.innerText = `${getMachineLabel(selectedMachine)} has been reported successfully.`;
-
-        document.getElementById("reportPhone").value = "";
-        document.getElementById("issueText").value = "";
-
-      } catch (error) {
-        console.error(error);
-        reportMessage.innerText = "Error: " + error.message;
-      }
-    }
-
+    // Event Bindings
     document.querySelectorAll(".block-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        selectBlock(btn.dataset.block);
-      });
+      btn.addEventListener("click", () => selectBlock(btn.dataset.block));
     });
 
     document.getElementById("changeBlockBtn").addEventListener("click", backToBlockSelection);
@@ -1061,57 +1014,58 @@
     document.querySelectorAll(".washer-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
         document.querySelectorAll(".washer-btn").forEach((b) => b.classList.remove("active"));
-
         btn.classList.add("active");
         selectedMachine = btn.dataset.machine;
-
-        document.getElementById("message").innerText = "";
-        document.getElementById("reportMessage").innerText = "";
-
         listenToMachine(selectedMachine);
       });
     });
 
-
-    document.getElementById("bookBtn").addEventListener("click", bookMachine);
-    document.getElementById("reportBtn").addEventListener("click", reportMachine);
-
-    document.getElementById("showReportBtn").addEventListener("click", () => {
-      const panel = document.getElementById("reportPanel");
-      panel.classList.toggle("hidden");
-
-      if (!panel.classList.contains("hidden")) {
-        panel.scrollIntoView({ behavior: "smooth" });
-      }
+    document.getElementById("langToggle").addEventListener("click", () => {
+      applyLanguage(currentLang === "EN" ? "BM" : "EN");
     });
 
-    document.getElementById("enableNotifBtn").addEventListener("click", async () => {
-      if (!("Notification" in window)) {
-        alert("This browser does not support notifications.");
-        return;
-      }
-
-      const permission = await Notification.requestPermission();
-
-      if (permission === "granted") {
-        alert("Notification enabled.");
-      } else {
-        alert("Notification blocked.");
-      }
-    });
+    document.getElementById("fontUpBtn").addEventListener("click", () => applyFontScale(currentScale + 0.05));
+    document.getElementById("fontDownBtn").addEventListener("click", () => applyFontScale(currentScale - 0.05));
 
     document.getElementById("themeToggle").addEventListener("click", () => {
       document.body.classList.toggle("dark");
-
-      localStorage.setItem(
-        "theme",
-        document.body.classList.contains("dark") ? "dark" : "light"
-      );
-
-      updateThemeButton();
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+      document.getElementById("themeToggle").textContent = document.body.classList.contains("dark") ? "☀️" : "🌙";
     });
 
-    setInitialTheme();
+    // Chat Box Toggle & Messaging
+    const aiChatBox = document.getElementById("aiChatBox");
+    document.getElementById("aiToggleBtn").addEventListener("click", () => aiChatBox.classList.toggle("hidden"));
+    document.getElementById("aiCloseBtn").addEventListener("click", () => aiChatBox.classList.add("hidden"));
+
+    function sendAiMessage() {
+      const input = document.getElementById("aiInput");
+      const text = input.value.trim();
+      if (!text) return;
+
+      const logs = document.getElementById("aiLogs");
+      logs.innerHTML += `<div class="ai-msg user">${text}</div>`;
+      input.value = "";
+
+      setTimeout(() => {
+        const reply = handleAiQuery(text);
+        logs.innerHTML += `<div class="ai-msg bot">${reply}</div>`;
+        logs.scrollTop = logs.scrollHeight;
+      }, 300);
+    }
+
+    document.getElementById("aiSendBtn").addEventListener("click", sendAiMessage);
+    document.getElementById("aiInput").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") sendAiMessage();
+    });
+
+    // Initialization
+    const savedTheme = localStorage.getItem("theme") || "dark";
+    if (savedTheme === "dark") document.body.classList.add("dark");
+    const savedLang = localStorage.getItem("dobi_lang") || "EN";
+    applyLanguage(savedLang);
+    const savedFont = parseFloat(localStorage.getItem("dobi_font_scale")) || 1;
+    applyFontScale(savedFont);
 
     const savedBlock = localStorage.getItem("selectedBlock");
     if (savedBlock) selectBlock(savedBlock);
